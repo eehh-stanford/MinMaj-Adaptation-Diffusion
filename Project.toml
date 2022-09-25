@@ -1,0 +1,13 @@
+name = "SocialFactorsForCBASustainability"
+authors = ["maturner01@gmail.com"]
+
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
+Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+DrWatson = "2.9.1"
+julia = "1.7.2"
