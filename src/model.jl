@@ -1,5 +1,6 @@
 using Agents
 using DrWatson: @dict
+using StatsBase
 
 
 @enum Trait a A
@@ -49,8 +50,9 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
 
     # println(length(prospective_teachers))
     # println(group)
-    teacher_weights = map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-                          prospective_teachers)
+    teacher_weights = 
+        map(agent -> model.trait_fitness_dict[agent.curr_trait], 
+                              prospective_teachers)
 
     # # XXX Allowing self-learning. XXX
     # teacher_weights[focal_agent.id] = 0.0
@@ -78,7 +80,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     agent_fitnesses = zeros(nagents)
     ngroups = 2
 
-    properties = @dict trait_fitness_dict agent_fitnesses ngroups
+    properties = @dict trait_fitness_dict agent_fitnesses ngroups a_fitness
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = floor(group_1_frac * nagents)
@@ -101,11 +103,13 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                 trait = A
             end
         end
+        # println(aidx)
         agent_to_add = CBA_Agent(aidx, trait, trait, group, homophily)
         add_agent!(agent_to_add, model)
     end
     
     agents = collect(allagents(model))
+    # println(length(agents))
 
     agents_group1 = filter(a -> a.group == 1, agents)
     agents_group2 = filter(a -> a.group == 2, agents)
@@ -114,6 +118,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
         1 => map(agent -> agent.id, agents_group1),
         2 => map(agent -> agent.id, agents_group2)
     )
+    # println(agentidxs_group_dict)
 
     model.agent_fitnesses = 
         map(agent -> trait_fitness_dict[agent.curr_trait], agents)
