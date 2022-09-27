@@ -73,14 +73,14 @@ end
 
 function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
-                                  homophily = 1.0,
+                                  homophily = 1.0, rep_idx = nothing,
                                   model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
     agent_fitnesses = zeros(nagents)
     ngroups = 2
 
-    properties = @dict trait_fitness_dict agent_fitnesses ngroups a_fitness
+    properties = @dict trait_fitness_dict agent_fitnesses ngroups a_fitness homophily group_1_frac rep_idx
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = floor(group_1_frac * nagents)

@@ -21,6 +21,55 @@ end
 @everywhere include("model.jl")
 
 
+function homophily_minority_experiment(nagents=100; a_fitness = 2.0, 
+                                       homophily = [
+                                        collect(0.0:0.05:0.95)..., 0.99
+                                       ],
+                                       group_1_frac = collect(0.05:0.05:0.5), 
+                                       nreplicates=10, group_w_innovation = 1)
+
+    rep_idx = collect(1:nreplicates)
+
+    params_list = dict_list(
+        @dict homophily group_1_frac a_fitness rep_idx
+    )
+
+    models = [cba_model(nagents; group_w_innovation, params...) 
+              for params in params_list]
+
+    function stopfn(model, step)
+        agents = allagents(model)
+
+        return (
+            all(agent.curr_trait == a for agent in agents) ||
+            all(agent.curr_trait == A for agent in agents)
+        )
+    end
+
+    # adata = [(:curr_trait, fixated)]
+    frac_a(v) = sum(v .== a) / length(v)
+
+    adata = [(:curr_trait, frac_a)]
+    mdata = [:homophily, :group_1_frac, :rep_idx]
+
+    # For now ignore non-extremal time steps.
+    # when(model, step) = (step == 0) || stopfn(model, step)
+    when(model, step) = stopfn(model, step)
+
+    adf, mdf = ensemblerun!(collect(models), agent_step!, model_step!, stopfn;
+                            adata, mdata, when, parallel = true, 
+                            showprogress = true)
+    
+    res = innerjoin(adf, mdf, on = [:step, :ensemble])
+
+    # Confirm that all runs fixated.
+    @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
+
+    return res
+    # return adf, mdf
+end
+
+
 function reproduce_KF_Figure1(nagents = 100;
                               a_fitness_low = 1.0, a_fitness_high = 2.0, 
                               d_a_fitness = 0.1, nreplicates = 10)
@@ -32,9 +81,6 @@ function reproduce_KF_Figure1(nagents = 100;
                         homophily = 1.0, group_w_innovation = 1) 
               for a_fitness in a_fitness_vals
               for _ in 1:nreplicates] 
-    # for m in models
-    #     println(length(allagents(m)))
-    # end
 
     function stopfn(model, step)
         agents = allagents(model)
