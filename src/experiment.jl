@@ -56,7 +56,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     # when(model, step) = (step == 0) || stopfn(model, step)
     when(model, step) = stopfn(model, step)
 
-    adf, mdf = ensemblerun!(collect(models), agent_step!, model_step!, stopfn;
+    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
     

@@ -48,8 +48,6 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
         filter(agent -> (agent.group == group) && (agent != focal_agent), 
                collect(allagents(model)))
 
-    # println(length(prospective_teachers))
-    # println(group)
     teacher_weights = 
         map(agent -> model.trait_fitness_dict[agent.curr_trait], 
                               prospective_teachers)
@@ -109,7 +107,6 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     end
     
     agents = collect(allagents(model))
-    # println(length(agents))
 
     agents_group1 = filter(a -> a.group == 1, agents)
     agents_group2 = filter(a -> a.group == 2, agents)
@@ -118,7 +115,6 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
         1 => map(agent -> agent.id, agents_group1),
         2 => map(agent -> agent.id, agents_group2)
     )
-    # println(agentidxs_group_dict)
 
     model.agent_fitnesses = 
         map(agent -> trait_fitness_dict[agent.curr_trait], agents)

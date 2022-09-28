@@ -19,35 +19,50 @@ PROJECT_THEME = Theme(
     panel_stroke = colorant"black", grid_line_width = 0pt
 )
 
-function sustainability_comparison_mingrouphas()
-    afit12 = load("data/outline/a_fitness=1.2__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
-    afit14 = load("data/outline/a_fitness=1.4__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
-    afit20 = load("data/outline/a_fitness=2.0__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
+function sustainability_comparison()
+    afit12_minhas = load("data/outline/a_fitness=1.2__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
+    afit14_minhas = load("data/outline/a_fitness=1.4__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
+    afit20_minhas = load("data/outline/a_fitness=2.0__group_1_frac=0.05__group_w_innovation=1.jld2")["agg"] 
+    # afit12_p2 = load("data/outline/a_fitness=1.2__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
+    # afit14_p2 = load("data/outline/a_fitness=1.4__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
+    # afit20_p2 = load("data/outline/a_fitness=2.0__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
+
 
     p = plot(
 
-        layer(afit12, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(default_color=SEED_COLORS[1])), 
-        layer(afit14, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(default_color=SEED_COLORS[2])), 
-        layer(afit20, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(default_color=SEED_COLORS[3])),
+        layer(afit12_minhas, x=:homophily, y=:sustainability, 
+              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
+        layer(afit14_minhas, x=:homophily, y=:sustainability, 
+              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
+        layer(afit20_minhas, x=:homophily, y=:sustainability, 
+              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])),
+
+        # layer(afit12_p2, x=:homophily, y=:sustainability, 
+        #       Geom.line, Geom.point, Theme(point_size=3.5pt, line_style=[:dash], line_width=1.5pt, point_shapes=[Shape.diamond], default_color=SEED_COLORS[1])), 
+        # layer(afit14_p2, x=:homophily, y=:sustainability, 
+        #       Geom.line, Geom.point, Theme(point_size=3.5pt, line_style=[:dash], line_width=1.5pt,point_shapes=[Shape.diamond], default_color=SEED_COLORS[2])), 
+        # layer(afit20_p2, x=:homophily, y=:sustainability, 
+        #        Geom.line, Geom.point, Theme(point_size=3.5pt, line_width=1.5pt, line_style=[:dash], point_shapes=[Shape.diamond], default_color=SEED_COLORS[3])),
+
          Guide.manual_color_key(
-            "Adaptive fitness",
+            "<i>a</i> fitness",
                                 
-            ["1.2", "1.4", "2.0"],
-            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]];
+            ["1.2", "1.4", "2.0"], #,"1.2, 20% minority", "1.4", "2.0",],
+
+            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],#SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],
+
+            shape=[Shape.circle, Shape.circle, Shape.circle],
+                   # Shape.diamond, Shape.diamond, Shape.diamond]
         ),
         
         Guide.xlabel("Homophily"),
         Guide.ylabel("Sustainability"),
         PROJECT_THEME
-
     )
 
     draw(
-         PDF("plots/outline/comparison_minsize=0.05_adapt-in-min.pdf",
-             6.25inch, 3.5inch), 
+         PDF("plots/outline/comparison_minsize=0.05.pdf",
+             5.25inch, 3.5inch), 
         p
     )
 end
@@ -66,7 +81,7 @@ function sustainability_vs_homophily(;
     else
         res = homophily_minority_experiment(100; 
                                             nreplicates=1000, group_1_frac, 
-                                            a_fitness, group_w_innovation=1)
+                                            a_fitness, group_w_innovation)
 
         agg = combine(groupby(res, :homophily), 
                       :frac_a_curr_trait => mean => :sustainability)
