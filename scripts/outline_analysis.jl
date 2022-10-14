@@ -19,29 +19,29 @@ PROJECT_THEME = Theme(
     panel_stroke = colorant"black", grid_line_width = 0pt
 )
 
-function sustainability_comparison(group_1_frac = 0.05)
-    afit12_minhas = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=1.jld2")["agg"] 
-    afit14_minhas = load("data/outline/a_fitness=1.4__group_1_frac=$(group_1_frac)__group_w_innovation=1.jld2")["agg"] 
-    afit20_minhas = load("data/outline/a_fitness=2.0__group_1_frac=$(group_1_frac)__group_w_innovation=1.jld2")["agg"] 
-    # afit12_p2 = load("data/outline/a_fitness=1.2__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
-    # afit14_p2 = load("data/outline/a_fitness=1.4__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
-    # afit20_p2 = load("data/outline/a_fitness=2.0__group_1_frac=0.2__group_w_innovation=1.jld2")["agg"] 
+function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
+    afit105_minhas = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit12_minhas = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit14_minhas = load("data/outline/a_fitness=1.4__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit20_minhas = load("data/outline/a_fitness=2.0__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
 
-    yticks = 0.4:0.2:1.0
+    yticks = 0.0:0.2:1.0
     p = plot(
 
-        layer(afit12_minhas, x=:homophily, y=:sustainability, 
+        layer(afit105_minhas, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
-        layer(afit14_minhas, x=:homophily, y=:sustainability, 
+        layer(afit12_minhas, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
+        layer(afit14_minhas, x=:homophily, y=:sustainability, 
+              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])), 
         layer(afit20_minhas, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])),
+              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[4])),
 
          Guide.manual_color_key(
             "<i>a</i> fitness",
-            ["1.2", "1.4", "2.0"], #,"1.2, 20% minority", "1.4", "2.0",],
-            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],#SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],
-            shape=[Shape.circle, Shape.circle, Shape.circle],
+            ["1.05", "1.2", "1.4", "2.0"], #,"1.2, 20% minority", "1.4", "2.0",],
+            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],#SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],
+            # shape=[Shape.circle, Shape.circle, Shape.circle],
         ),
         
         Guide.xlabel("Homophily"),
@@ -51,7 +51,7 @@ function sustainability_comparison(group_1_frac = 0.05)
     )
 
     draw(
-         PDF("plots/outline/comparison_minsize=$(group_1_frac).pdf",
+         PDF("plots/outline/comparison_minsize=$(group_1_frac)_group_w_innovation=$(group_w_innovation).pdf",
              5.25inch, 3.5inch), 
         p
     )

@@ -1,12 +1,73 @@
-# Test that extremal group fraction, homophily, and fitness values result in 
-# expected trait prevalences, see below for example:
+using Test
+    
 
-m = cba_model(100; a_fitness = 1.75, A_fitness=1.0, 
-              group_1_frac = 0.2, homophily = 1.0, group_w_innovation = 2)
+@testset "Groups are initialized as expected" begin
 
-adata = [(:curr_trait, countmap), 
-         (:curr_trait, v -> sum(v .== a) / length(v))]
+    m = cba_model(4; group_1_frac = 0.5, homophily = 0.0, a_fitness = 2.0)
 
-adf, mdf = run!(m, agent_step!, model_step!, 50; adata)
+    agents = collect(allagents(m))
+    @test length(agents) == 4
 
-# Final step of first adf col should be A=>20, a=>80; last adf col should be 0.8.
+    ngroup1 = length(filter(agent -> agent.group == 1, agents))
+    ngroup2 = length(filter(agent -> agent.group == 2, agents))
+
+    @test ngroup1 == 2 
+    @test ngroup1 == ngroup2 
+
+    @test m[1].group == 1
+    @test m[2].group == 1
+    @test m[3].group == 2
+    @test m[4].group == 2
+
+    @test m[1].curr_trait == a
+    @test m[2].curr_trait == A
+    @test m[3].curr_trait == A
+    @test m[4].curr_trait == A
+
+    m = cba_model(4; group_1_frac = 0.25, group_w_innovation = 2, 
+                  homophily = 0.0, a_fitness = 2.0)
+
+    @test m[1].group == 1
+    @test m[2].group == 2
+    @test m[3].group == 2
+    @test m[4].group == 2
+
+    @test m[1].curr_trait == A
+    @test m[2].curr_trait == a
+    @test m[3].curr_trait == A
+    @test m[4].curr_trait == A
+end
+
+
+@testset "Teacher selection works as expected" begin
+
+    m = cba_model(4; group_1_frac = 0.25, homophily = 1.0, a_fitness = 2.0)
+    
+    @test sample_group(m[1], m) == 1
+    @test sample_group(m[2], m) == 2
+    @test sample_group(m[3], m) == 2
+    @test sample_group(m[4], m) == 2
+
+    m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
+    
+    ntrials = 1e4
+    for aidx in 1:4
+        group_counts = Dict(1 => 0, 2 => 0)
+        for _ in 1:ntrials
+            group_counts[sample_group(m[aidx], m)] += 1
+        end
+
+        @test group_counts[1] ≈ ntrials/2.0 rtol=0.1
+        @test group_counts[2] ≈ ntrials/2.0 rtol=0.1
+    end
+
+    ntrials = 100
+
+    m[2].curr_trait = a
+    m[3].curr_trait = A
+    m[4].curr_trait = a
+    for _ in 1:ntrials
+        t = select_teacher(m[2], m, 2)
+        @test t == m[4]
+    end
+end
