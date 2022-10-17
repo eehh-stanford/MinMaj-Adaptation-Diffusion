@@ -3,6 +3,9 @@ using DataFrames
 using Distributed
 using StatsBase
 
+
+
+
 # Set up multiprocessing.
 try
     num_cores = parse(Int, ENV["SLURM_CPUS_PER_TASK"])
@@ -37,7 +40,13 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     models = [cba_model(nagents; group_w_innovation, params...) 
               for params in params_list]
 
-    function stopfn(model, step)
+    # adata = [(:curr_trait, fixated)]
+    frac_a(v) = sum(v .== a) / length(v)
+
+    adata = [(:curr_trait, frac_a)]
+    mdata = [:homophily, :group_1_frac, :rep_idx]
+
+    function stopfn_fixated(model, step)
         agents = allagents(model)
 
         return (
@@ -46,17 +55,10 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
         )
     end
 
-    # adata = [(:curr_trait, fixated)]
-    frac_a(v) = sum(v .== a) / length(v)
-
-    adata = [(:curr_trait, frac_a)]
-    mdata = [:homophily, :group_1_frac, :rep_idx]
-
     # For now ignore non-extremal time steps.
-    # when(model, step) = (step == 0) || stopfn(model, step)
-    when(model, step) = stopfn(model, step)
+    when(model, step) = stopfn_fixated(model, step)
 
-    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn;
+    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
     
@@ -66,7 +68,6 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
 
     return res
-    # return adf, mdf
 end
 
 
@@ -82,26 +83,15 @@ function reproduce_KF_Figure1(nagents = 100;
               for a_fitness in a_fitness_vals
               for _ in 1:nreplicates] 
 
-    function stopfn(model, step)
-        agents = allagents(model)
-
-        return (
-            all(agent.curr_trait == a for agent in agents) ||
-            all(agent.curr_trait == A for agent in agents)
-        )
-    end
-
-    # adata = [(:curr_trait, fixated)]
     frac_a(v) = sum(v .== a) / length(v)
 
     adata = [(:curr_trait, frac_a)]
     mdata = [:a_fitness]
 
     # For now ignore non-extremal time steps.
-    # when(model, step) = (step == 0) || stopfn(model, step)
-    when(model, step) = stopfn(model, step)
+    when(model, step) = stopfn_fixated(model, step)
 
-    adf, mdf = ensemblerun!(collect(models), agent_step!, model_step!, stopfn;
+    adf, mdf = ensemblerun!(collect(models), agent_step!, model_step!, stopfn_fixated;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
     

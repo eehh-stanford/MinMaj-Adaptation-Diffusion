@@ -60,7 +60,6 @@ end
 function agent_step!(focal_agent::CBA_Agent, model::ABM)
 
     # Agent samples randomly from one of the groups, weighted by homophily.
-    # XXX Only works for ngroups = 2.
     group = sample_group(focal_agent, model)
 
     teacher = select_teacher(focal_agent, model, group)

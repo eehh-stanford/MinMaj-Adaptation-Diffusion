@@ -4,7 +4,7 @@ using LsqFit
 
 include("../src/experiment.jl")
 
-import Cairo, Fontconfig
+using Cairo, Fontconfig, Gadfly, Compose
 
 using Colors
 logocolors = Colors.JULIA_LOGO_COLORS
@@ -20,28 +20,27 @@ PROJECT_THEME = Theme(
 )
 
 function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
-    afit105_minhas = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit12_minhas = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit14_minhas = load("data/outline/a_fitness=1.4__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit20_minhas = load("data/outline/a_fitness=2.0__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit105 = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit12 = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit14 = load("data/outline/a_fitness=1.4__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit20 = load("data/outline/a_fitness=2.0__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
 
     yticks = 0.0:0.2:1.0
     p = plot(
 
-        layer(afit105_minhas, x=:homophily, y=:sustainability, 
+        layer(afit105, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
-        layer(afit12_minhas, x=:homophily, y=:sustainability, 
+        layer(afit12, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
-        layer(afit14_minhas, x=:homophily, y=:sustainability, 
+        layer(afit14, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])), 
-        layer(afit20_minhas, x=:homophily, y=:sustainability, 
+        layer(afit20, x=:homophily, y=:sustainability, 
               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[4])),
 
          Guide.manual_color_key(
             "<i>a</i> fitness",
-            ["1.05", "1.2", "1.4", "2.0"], #,"1.2, 20% minority", "1.4", "2.0",],
-            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],#SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3]],
-            # shape=[Shape.circle, Shape.circle, Shape.circle],
+            ["1.05", "1.2", "1.4", "2.0"], 
+            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],
         ),
         
         Guide.xlabel("Homophily"),
@@ -82,7 +81,7 @@ function sustainability_vs_homophily(;
     xdata = agg.homophily
     ydata = agg.sustainability
 
-    # Fit a quadratic for giggles.
+    # Maybe fit a quadratic as a guide.
     if fit_quadratic
         @. quad_mod(x, p) = p[1] + (x * p[2]) + (p[3] * (x^2))
         p0 = [0.0, 0.5, -0.5]
@@ -91,7 +90,6 @@ function sustainability_vs_homophily(;
     end
 
     p = plot(layer(agg, x=:homophily, y=:sustainability, Geom.line, Geom.point))
-             # layer(x=xdata, y=ydatafit, Geom.line))
 
     drawpath = joinpath(figure_dir, froot * ".pdf")
 
@@ -106,7 +104,5 @@ end
 
 function reproduce_FK(sync_file="data/outline/FK_Figure1.jld2",
                       figure_dir="plots/outline/")
-
-      
 
 end

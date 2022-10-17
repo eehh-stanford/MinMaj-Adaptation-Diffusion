@@ -1,5 +1,6 @@
 using Test
-    
+ 
+include("../model.jl")
 
 @testset "Groups are initialized as expected" begin
 
