@@ -49,7 +49,7 @@ Currently, one must manually run `sustainability_vs_homophily` over each desired
 minority size setting, and start the adaptive trait in both the minority and majority groups in each case
 to reproduce the figures in our current outline. This process is in the process of being automated.
 
-After that is done, however, one can use the `sustainability_comparison` function (also in [/scripts/outline_analysis.jl](/scripts/outline_analysis.jl)) to plot the data. The data currently are set by default to be saved to `data/outline`. Note in the `sustainability_function` that the four $f(a)$ values must match those currently presented in our outline.
+After that is done, one can use the `sustainability_comparison` function (also in [/scripts/outline_analysis.jl](/scripts/outline_analysis.jl)) to plot the data. The data currently are set by default to be saved to `data/outline`. Note in the `sustainability_function` that the four $f(a)$ values must match those currently presented in our outline.
 
 ## Computational experiments for a batch of parameters
 
