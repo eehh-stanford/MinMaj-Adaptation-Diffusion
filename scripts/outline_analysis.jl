@@ -56,6 +56,7 @@ function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     )
 end
 
+
 function sustainability_vs_homophily(;
         a_fitness=1.4, group_1_frac = 0.05, sync_dir = "data/outline",
         group_w_innovation = 1, fit_quadratic = false, figure_dir = "plots/outline")
@@ -69,7 +70,7 @@ function sustainability_vs_homophily(;
         agg = load(aggpath)["agg"]
     else
         res = homophily_minority_experiment(100; 
-                                            nreplicates=1000, group_1_frac, 
+                                            nreplicates=100, group_1_frac, 
                                             a_fitness, group_w_innovation)
 
         agg = combine(groupby(res, :homophily), 
@@ -81,7 +82,7 @@ function sustainability_vs_homophily(;
     xdata = agg.homophily
     ydata = agg.sustainability
 
-    # Maybe fit a quadratic as a guide.
+    # Maybe fit a quadratic for giggles.
     if fit_quadratic
         @. quad_mod(x, p) = p[1] + (x * p[2]) + (p[3] * (x^2))
         p0 = [0.0, 0.5, -0.5]
