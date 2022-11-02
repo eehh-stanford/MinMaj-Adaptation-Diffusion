@@ -87,20 +87,24 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
         # For now we assume two groups and one agent has de novo innovation.
         if aidx ≤ group1_cutoff
             group = 1
-            if (group_w_innovation == 1) && (aidx == 1)
+            if (((group_w_innovation == 1) || (group_w_innovation == "Both")) 
+                && (aidx == 1))
+
                 trait = a
             else
                 trait = A
             end
         else
             group = 2
-            if (group_w_innovation == 2) && (aidx == group1_cutoff + 1)
+            if (((group_w_innovation == 2) || (group_w_innovation == "Both")) 
+                && (aidx == group1_cutoff + 1))
+
                 trait = a
             else
                 trait = A
             end
         end
-        # println(aidx)
+        
         agent_to_add = CBA_Agent(aidx, trait, trait, group, homophily)
         add_agent!(agent_to_add, model)
     end

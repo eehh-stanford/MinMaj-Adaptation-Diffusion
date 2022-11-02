@@ -35,13 +35,31 @@ are as expected.
 # Run the model and analyze results
 
 The code is separated in two main components: (1) model runs over the model
-parameter space; and (2) analyzing model outputs. 
+parameter space; and (2) analyzing model outputs. Create a directory, `plots/outline`, in order to save output plots from the script run as follows.
 
-## Model runs
+To run the model with a given number of agents, group size, and fitness value of trait $a$, for
+a given number of replicates and homophily values, you can use the `sustainability_vs_homophily`
+function in the [scripts/outline_analysis.jl](/scripts/outline_analysis.jl) file. This function will 
+run the `homophily_minority_experiment` in [/src/experiment.jl](/src/experiment.jl). This
+function will automatically process output data from the `homophily_minority_experiment` for plotting
+"sustainability" over each tested homophily value. Sustainability is calculated as the fraction of 
+trials that had $a$ go to fixation (adopted by entire population) for the relevant parameter batch. 
+
+Currently, one must manually run `sustainability_vs_homophily` over each desired value of $f(a)$, each 
+minority size setting, and start the adaptive trait in both the minority and majority groups in each case
+to reproduce the figures in our current outline. This process is in the process of being automated.
+
+After that is done, one can use the `sustainability_comparison` function (also in [/scripts/outline_analysis.jl](/scripts/outline_analysis.jl)) to plot the data. The data currently are set by default to be saved to `data/outline`. Note in the `sustainability_function` that the four $f(a)$ values must match those currently presented in our outline.
+
+## Computational experiments for a batch of parameters
+
+A computational experiment involves running a model over many parameter settings, which we could call a batch of parameters. In this code we use the [`ensemblerun!` function provided by Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/api/#Agents.ensemblerun!).
+
+## Single-parameter setting model runs
 
 We can run models one at a time, or in batches according to sets of parameters
 to systematically vary to understand their effect on agent behavior and model
-outcomes. First, to run the model one at a time
+outcomes. To do this, initialize a model using the [`cba_model` function](https://github.com/mt-digital/SustainableCBA/blob/main/src/model.jl#L72) in [/src/model.jl](/src/model.jl).
 
 
 # Model motivation and operation
@@ -60,4 +78,4 @@ We model people as computational _agents_ in this agent-based model.
 The model assumes there are two groups of $N$ agents total. One group is the
 minority with $mN$ agents, and the majority has $(1-m)N$ agents. The 
 probability that agents interact with one another is determined via the 
-global _homophily_, $h$.
+global _homophily_, $h$. (More details to come; for now see model details by viewing [/src/model.jl](/src/model.jl).

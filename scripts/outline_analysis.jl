@@ -1,6 +1,5 @@
 using DataFrames
 using JLD2
-using LsqFit
 
 include("../src/experiment.jl")
 
@@ -18,6 +17,62 @@ PROJECT_THEME = Theme(
     line_width = 3.5pt, key_label_font_size=14pt, #grid_line_width = 1.5pt,
     panel_stroke = colorant"black", grid_line_width = 0pt
 )
+
+
+function minority_majority_comparison(nagents=100; 
+                                      group_1_frac = 0.05, a_fitness = 1.2, 
+                                      nreplicates = 1000)
+
+    # Set up diagnostic figure directory if it doesn't already exist.
+    diagnostic_dir = "plots/minmaj_compare"
+    sync_dir = "data/minmaj_compare"
+    if !isdir(diagnostic_dir)
+        mkpath(diagnostic_dir)
+    end
+    if !isdir(sync_dir)
+        mkpath(sync_dir)
+    end
+
+    groups = [1, 2, "Both"]
+    results = DataFrame(:group_w_innovation => [], 
+                        :homophily => [], :sustainability => [])
+
+    # Load or create data for all three cases: start in minortiy, start in majority.
+    for group in groups
+        result = 
+            sustainability_vs_homophily(nagents; group_w_innovation = group,
+                                        a_fitness, group_1_frac, nreplicates,
+                                        sync_dir, figure_dir = diagnostic_dir)
+        if group == 1
+            group_label = "Minority"
+        elseif group == 2
+            group_label = "Majority"
+        else
+            group_label = group
+        end
+
+        result.group_w_innovation .= group_label
+
+        append!(results, result)
+    end
+
+    figpath = joinpath(
+        diagnostic_dir, 
+        "nagents=$nagents-group_1_frac=$group_1_frac-a_fitness=$a_fitness.pdf"
+    )
+
+    p = plot(results, x=:homophily, y=:sustainability, 
+             linestyle=:group_w_innovation, Geom.line)
+    
+    draw(
+         PDF(figpath,
+             6.25inch, 3.5inch), 
+        p
+    )
+
+    return results
+end
+
 
 function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     afit105 = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
@@ -56,21 +111,21 @@ function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     )
 end
 
+function sustainability_vs_homophily(nagents = 100;
+        a_fitness=1.4, group_1_frac = 0.05, nreplicates = 1000, 
+        sync_dir = "data/outline", group_w_innovation = 1, 
+        figure_dir = "plots/outline")
 
-function sustainability_vs_homophily(;
-        a_fitness=1.4, group_1_frac = 0.05, sync_dir = "data/outline",
-        group_w_innovation = 1, fit_quadratic = false, figure_dir = "plots/outline")
-
-    # Run one where minority has adaptation with peak in middle for 
-    # most sustainability as function of homophily.
-    froot = "a_fitness=$(a_fitness)__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation)"
-    aggpath = joinpath(sync_dir, froot * ".jld2")
+    # Build base file name.
+    fbase = "a_fitness=$(a_fitness)__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation)"
+    # Set path to which aggregated data will be synced.
+    aggpath = joinpath(sync_dir, fbase * ".jld2")
 
     if isfile(aggpath)
         agg = load(aggpath)["agg"]
     else
-        res = homophily_minority_experiment(100; 
-                                            nreplicates=100, group_1_frac, 
+        res = homophily_minority_experiment(nagents; 
+                                            nreplicates, group_1_frac, 
                                             a_fitness, group_w_innovation)
 
         agg = combine(groupby(res, :homophily), 
@@ -82,24 +137,17 @@ function sustainability_vs_homophily(;
     xdata = agg.homophily
     ydata = agg.sustainability
 
-    # Maybe fit a quadratic for giggles.
-    if fit_quadratic
-        @. quad_mod(x, p) = p[1] + (x * p[2]) + (p[3] * (x^2))
-        p0 = [0.0, 0.5, -0.5]
-        fit = curve_fit(quad_mod, xdata, ydata, p0)
-        ydatafit = quad_mod(xdata, fit.param)
-    end
-
     p = plot(layer(agg, x=:homophily, y=:sustainability, Geom.line, Geom.point))
 
-    drawpath = joinpath(figure_dir, froot * ".pdf")
+    figpath = joinpath(figure_dir, fbase * ".pdf")
 
     draw(
-         PDF(drawpath,
+         PDF(figpath,
              6.25inch, 3.5inch), 
         p
     )
 
+    return agg
 end
 
 
