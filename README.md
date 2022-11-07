@@ -12,7 +12,7 @@ To get started, clone this repository, e.g., execute the following in the
 terminal: 
 
 ```
-git clone https://github.com/mt-digital/SustainableCBA.git
+git clone https://github.com/eehh-stanford/SustainableCBA.git
 ```
 
 After cloning the repository, install all dependencies by first starting the
