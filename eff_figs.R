@@ -1,6 +1,7 @@
 
 ## Efferson et al. (2020) figure
 
+## First, define a function and for logistic curve representing cumulative adoption
 x <- seq(0,1,length=500)
 # a = inflection point
 # b = growth rate/steepness
@@ -53,7 +54,8 @@ plot(x,resp,type="n", xlab="Fraction Libtards Adopted", ylab="Total Mask Adoptio
 abline(a=0,b=1,col="grey")
 for (i in 1:100) lines(x,PP[i,])
 
-## mixture of 2 logistic curves
+## mixture of 2 logistic curves: p of logistic 1, 1-p of logistic 2
+## use this function to find the equilibria
 f <- function(a1,b1,c1,a2,b2,c2,x,p){
   return(x-(p*(c1/(1+exp(-(b1*(x-a1)))))+(1-p)*(0.25+c2/(1+exp(-(b2*(x-a2)))))))
 }
@@ -65,9 +67,12 @@ a2 <- 1/2
 b2 <- 7
 c2 <- 1/2
 p <- seq(0,1,length=1000)
+## rootSolve package returns all zeros of a function
+## this is important for this case where we (1) know there are 3 equilibria, and (2) we want all three
 library(rootSolve)
 uniroot.all(f,a1=a1,b1=b1,c1=c1,a2=a2,b2=b2,c2=c2,p=0.25,interval=c(0,1))
 
+## cycle through all the possible mixtures
 AA <- matrix(NA,1000,3)
 for(i in 1:1000){
   tmp <- uniroot.all(f,a1=a1,b1=b1,c1=c1,a2=a2,b2=b2,c2=c2,p=p[i],interval=c(0,1))
@@ -169,6 +174,8 @@ plot(gg,vertex.color=cols,vertex.label=NA,edge.width=2,edge.color=ecols,
 dev.off()
 
 cols1 <- cols
+## actually need to investigate which vertices are bridges
+## this only applies to the saved graph!
 cols1[c(9,11,13,16,19,24,33,35,37)] <- "blue4"
 
 pdf(file="the-bridges.pdf")
