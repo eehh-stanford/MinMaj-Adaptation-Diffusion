@@ -1,5 +1,7 @@
+using CSV
 using DataFrames
 using JLD2
+using RCall
 
 include("../src/experiment.jl")
 
@@ -71,6 +73,61 @@ function minority_majority_comparison(nagents=100;
     )
 
     return results
+end
+
+
+function plot_minmaj_compare(data_frame; csv_path = "tmp_R.csv", 
+                             width = 7.0, height = 3.5,
+                             save_path = 
+                                "~/workspace/Writing/SustainableCBA/Figures/minmaj_compare.pdf")
+
+    # Need to write dataframe to file then reload in R because it wasn't 
+    # working to pass dataframe to R string. 
+    CSV.write(csv_path, data_frame)
+
+    # Use the R macro to execute this chunk of R code for plotting.
+R"""
+    library(ggplot2) 
+
+    mytheme = theme(
+        panel.border = element_blank(), axis.line = element_line(), 
+        text = element_text(size=16, family = "Gill Sans"), 
+        panel.background = element_rect(fill = "white"),
+        legend.key = element_rect(fill = "white"),
+        axis.text=element_text(color="black")
+    )
+    
+    data_frame <- read.csv($csv_path); 
+
+    p <- ggplot(data_frame, aes(x=homophily, y=sustainability, 
+                group = group_w_innovation, linetype = group_w_innovation, 
+                shape = group_w_innovation)) + 
+
+    geom_line(lwd=1.10) + geom_point(size=2.5) + 
+
+    labs(x='Homophily', y = 'Sustainability', 
+        linetype = 'Group with innovation', 
+        shape = 'Group with innovation') + 
+        
+    scale_linetype_discrete(breaks=c('Minority', 'Majority', 'Both')) + 
+    
+    scale_shape_manual(values=c(0,2,1), 
+        breaks=c('Minority', 'Majority', 'Both')) + 
+
+    scale_x_continuous(breaks=seq(0, 1, 0.2)) + 
+
+    mytheme
+
+    ggsave(filename = $save_path, device = cairo_pdf, p, 
+           width=$width, height=$height, units="in")
+"""
+
+end
+
+
+function reproduce_FK(sync_file="data/outline/FK_Figure1.jld2",
+                      figure_dir="plots/outline/")
+
 end
 
 
@@ -151,39 +208,3 @@ function sustainability_vs_homophily(nagents = 100;
 end
 
 
-function plot_minmaj_compare(data_frame; csv_path = "tmp_R.csv")
-
-
-    CSV.write(csv_path, data_frame)
-
-    # Use the R macro to write and execute this chunk of R code for plotting.
-R"""
-    library(ggplot2) 
-    
-    data_frame <- read.csv($csv_path); 
-
-    ggplot(data_frame, aes(x=homophily, y=sustainability, 
-        group = group_w_innovation, linetype = group_w_innovation, 
-        shape = group_w_innovation)) + 
-
-    geom_line() + geom_point() + 
-
-    labs(x='Homophily', y = 'Sustainability', 
-        linetype = 'Group with innovation', 
-        shape = 'Group with innovation') + 
-        
-    scale_linetype_discrete(breaks=c('Minority', 'Majority', 'Both')) + 
-    
-    scale_shape_manual(values=c(0,2,1), 
-        breaks=c('Minority', 'Majority', 'Both')) + 
-
-    scale_x_continuous(breaks=seq(0, 1, 0.2)) + theme_minimal()
-"""
-
-end
-
-
-function reproduce_FK(sync_file="data/outline/FK_Figure1.jld2",
-                      figure_dir="plots/outline/")
-
-end
