@@ -13,6 +13,8 @@ mutable struct CBA_Agent <: AbstractAgent
     next_trait::Trait
     group::Int
     homophily::Float64
+    # homophily_in::Float64
+    # homophily_out::Float64
 
 end
 

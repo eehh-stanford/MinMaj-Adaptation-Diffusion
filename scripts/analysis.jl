@@ -23,11 +23,11 @@ PROJECT_THEME = Theme(
 
 function minority_majority_comparison(nagents=100; 
                                       group_1_frac = 0.05, a_fitness = 1.2, 
+                                      diagnostic_dir = "plots/minmaj_compare",
+                                      sync_dir = "data/minmaj_compare",
                                       nreplicates = 1000)
 
     # Set up diagnostic figure directory if it doesn't already exist.
-    diagnostic_dir = "plots/minmaj_compare"
-    sync_dir = "data/minmaj_compare"
     if !isdir(diagnostic_dir)
         mkpath(diagnostic_dir)
     end
@@ -41,7 +41,7 @@ function minority_majority_comparison(nagents=100;
 
     # Load or create data for all three cases: start in minortiy, start in majority.
     for group in groups
-        result = 
+        result =  
             sustainability_vs_homophily(nagents; group_w_innovation = group,
                                         a_fitness, group_1_frac, nreplicates,
                                         sync_dir, figure_dir = diagnostic_dir)
@@ -75,6 +75,50 @@ function minority_majority_comparison(nagents=100;
     return results
 end
 
+function plot_nagents_sensitivity(;
+                                  figure_dir = "figure_scratch/nagents",
+                                  data_dir = "data/sensitivity/nagents",
+                                  nagents_vec = [200, 500, 1000],
+                                  width = 7.0, height = 3.5, save_dir =
+                                  "~/workspace/Writing/SustainableCBA/Figures/")
+
+    # Get list of all files in the sensitivity/nagents directory.
+    files = readdir(data_dir, join=true)
+        
+    # For each of the nagents values, make a CSV by concatenating the three
+    # versions for minmaj compare: innovation starts in min, maj, and min+maj.
+    for nagents in nagents_vec
+
+        these_files = 
+            collect(filter(file -> occursin("nagents=$nagents", file), files))
+
+        println(these_files)
+        
+        # XXX TODO Awkward hack to add starting group before concat.
+        dfs = [JLD2.load(file)["agg"] for file in these_files] 
+        for (idx, df) in enumerate(dfs)
+
+            if occursin("1.jld2", these_files[idx])
+                group = "Minority"
+            elseif occursin("2.jld2", these_files[idx])
+                group = "Majority"
+            elseif occursin("Both.jld2", these_files[idx])
+                group = "Both"
+            else
+                error("Not a valid group")
+            end
+
+            df[!, :group_w_innovation] .= group
+        end
+
+        # Result dataframe is 
+        res = vcat(dfs...)
+
+        save_path = joinpath(figure_dir, "nagents=$(nagents)_minmaj_compare.pdf")
+        plot_minmaj_compare(res; save_path, width, height)
+    end
+
+end
 
 function plot_minmaj_compare(data_frame; csv_path = "tmp_R.csv", 
                              width = 7.0, height = 3.5,
@@ -87,23 +131,24 @@ function plot_minmaj_compare(data_frame; csv_path = "tmp_R.csv",
 
     # Use the R macro to execute this chunk of R code for plotting.
 R"""
-    library(ggplot2) 
+    library(ggplot2)  
 
     mytheme = theme(
-        panel.border = element_blank(), axis.line = element_line(), 
-        text = element_text(size=16, family = "Gill Sans"), 
+        panel.border = element_blank(), axis.line = element_line(),  
+        text = element_text(size=16),  #, family = "Gill Sans"), 
         panel.background = element_rect(fill = "white"),
         legend.key = element_rect(fill = "white"),
-        axis.text=element_text(color="black")
-    )
-    
+        axis.text=element_text(color="black"),
+        legend.key.width = unit(0.6,"in") 
+    ) 
     data_frame <- read.csv($csv_path); 
 
     p <- ggplot(data_frame, aes(x=homophily, y=sustainability, 
                 group = group_w_innovation, linetype = group_w_innovation, 
                 shape = group_w_innovation)) + 
 
-    geom_line(lwd=1.10) + geom_point(size=2.5) + 
+                geom_point(size=3.0, color="#6A6A6A") + 
+                geom_smooth(se=FALSE) + #geom_line(lwd=1.10) + 
 
     labs(x='Homophily', y = 'Sustainability', 
         linetype = 'Group with innovation', 
@@ -168,6 +213,7 @@ function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     )
 end
 
+
 function sustainability_vs_homophily(nagents = 100;
         a_fitness=1.4, group_1_frac = 0.05, nreplicates = 1000, 
         sync_dir = "data/outline", group_w_innovation = 1, 
@@ -184,9 +230,14 @@ function sustainability_vs_homophily(nagents = 100;
         res = homophily_minority_experiment(nagents; 
                                             nreplicates, group_1_frac, 
                                             a_fitness, group_w_innovation)
+        println(first(res, 10))
 
+        # Group by homophily, calculate the mean sustainability and 
+        # time to convergence across replicates for each homophily value.
         agg = combine(groupby(res, :homophily), 
-                      :frac_a_curr_trait => mean => :sustainability)
+                      :frac_a_curr_trait => mean => :sustainability,
+                      :step => mean => :step
+                      )
 
         @save aggpath agg
     end
