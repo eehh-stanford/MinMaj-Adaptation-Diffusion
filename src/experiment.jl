@@ -33,8 +33,11 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
 
     rep_idx = collect(1:nreplicates)
 
+    homophily_1 = homophily
+    homophily_2 = homophily
+
     params_list = dict_list(
-        @dict homophily group_1_frac a_fitness rep_idx
+        @dict homophily_1 homophily_2 group_1_frac a_fitness rep_idx
     )
 
     models = [cba_model(nagents; group_w_innovation, params...) 

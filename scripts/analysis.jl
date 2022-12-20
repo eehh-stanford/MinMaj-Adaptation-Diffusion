@@ -120,6 +120,7 @@ function plot_nagents_sensitivity(;
 
 end
 
+
 function plot_minmaj_compare(data_frame; csv_path = "tmp_R.csv", 
                              width = 7.0, height = 3.5,
                              save_path = 
