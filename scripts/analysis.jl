@@ -75,6 +75,7 @@ function minority_majority_comparison(nagents=100;
     return results
 end
 
+
 function plot_nagents_sensitivity(;
                                   figure_dir = "figure_scratch/nagents",
                                   data_dir = "data/sensitivity/nagents",
@@ -235,18 +236,20 @@ function sustainability_vs_homophily(nagents = 100;
 
         # Group by homophily, calculate the mean sustainability and 
         # time to convergence across replicates for each homophily value.
-        agg = combine(groupby(res, :homophily), 
+        agg = combine(groupby(res, [:homophily_1, :homophily_2]), 
                       :frac_a_curr_trait => mean => :sustainability,
                       :step => mean => :step
                       )
 
         @save aggpath agg
     end
-    
-    xdata = agg.homophily
-    ydata = agg.sustainability
 
-    p = plot(layer(agg, x=:homophily, y=:sustainability, Geom.line, Geom.point))
+    agg_select = filter([:homophily_1, :homophily_2] => (h1, h2) -> h1 == h2, agg)
+    # xdata = agg.homophily
+    # ydata = agg.sustainability
+
+    # p = plot(layer(agg, x=:homophily, y=:sustainability, Geom.line, Geom.point))
+    p = plot(layer(agg_select, x=:homophily_1, y=:sustainability, Geom.line, Geom.point))
 
     figpath = joinpath(figure_dir, fbase * ".pdf")
 

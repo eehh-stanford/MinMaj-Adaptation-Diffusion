@@ -48,6 +48,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
 
     adata = [(:curr_trait, frac_a)]
     mdata = [:homophily, :group_1_frac, :rep_idx]
+    mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)
@@ -89,7 +90,7 @@ function reproduce_KF_Figure1(nagents = 100;
     frac_a(v) = sum(v .== a) / length(v)
 
     adata = [(:curr_trait, frac_a)]
-    mdata = [:a_fitness]
+    mdata = [:a_fitness, :homophily_1, :homophily_2]
 
     # For now ignore non-extremal time steps.
     when(model, step) = stopfn_fixated(model, step)
