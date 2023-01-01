@@ -47,7 +47,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     frac_a(v) = sum(v .== a) / length(v)
 
     adata = [(:curr_trait, frac_a)]
-    mdata = [:homophily, :group_1_frac, :rep_idx]
+    # mdata = [:homophily, :group_1_frac, :rep_idx]
     mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
 
     function stopfn_fixated(model, step)

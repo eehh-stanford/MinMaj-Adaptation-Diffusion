@@ -26,9 +26,12 @@ function model_step!(model)
     end
 end
 
+
 function sample_group(focal_agent, model)
+
     weights = zeros(2)
 
+    # XXX a waste to calculate this every time.
     agent_group_weight = (1 + focal_agent.homophily) / 2.0
 
     weights[focal_agent.group] = agent_group_weight
@@ -39,6 +42,7 @@ end
 
 
 function select_teacher(focal_agent, model, group)
+
     ## Begin payoff-biased social learning from teacher within selected group.
     prospective_teachers = 
         filter(agent -> (agent.group == group) && (agent != focal_agent), 
@@ -62,6 +66,7 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
     # Agent samples randomly from one of the groups, weighted by homophily.
     group = sample_group(focal_agent, model)
 
+    #
     teacher = select_teacher(focal_agent, model, group)
 
     # Learn from teacher.
