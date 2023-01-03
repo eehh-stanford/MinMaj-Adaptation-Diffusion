@@ -49,7 +49,8 @@ end
     @test sample_group(m[3], m) == 2
     @test sample_group(m[4], m) == 2
 
-    m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
+    # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
+    m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, a_fitness = 1e9)
     
     ntrials = 1e4
     for aidx in 1:4
