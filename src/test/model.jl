@@ -40,7 +40,7 @@ include("../model.jl")
 end
 
 
-@testset "Teacher selection works as expected" begin
+@testset "Teacher selection and learning works as expected" begin
 
     m = cba_model(4; group_1_frac = 0.25, homophily = 1.0, a_fitness = 2.0)
     
@@ -72,4 +72,10 @@ end
         t = select_teacher(m[2], m, 2)
         @test t == m[4]
     end
+
+    # TODO write tests of which agents are selected and whether learner learns
+    # teacher's trait. Can use 3-person groups for extreme simplicity. 
+    # GOAL: understand why majority group homophily seems to dominate, when 
+    # it seems like minority group homophily is most important. 
+
 end
