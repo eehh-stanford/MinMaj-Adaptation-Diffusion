@@ -1,5 +1,10 @@
+require(ggplot2)
+require(latex2exp)
+require(dplyr)
+require(reshape2)
+require(stringr)
 
-mytheme = theme(axis.line = element_line(), 
+mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 text = element_text(size=16),# family = 'PT Sans'),
                 panel.background = element_rect(fill = "white"))
 
@@ -36,4 +41,30 @@ asymm_heatmap <- function(asymm_df) {
     coord_fixed() +
     mytheme
     
+  # **** TODO GGSAVE THIS SHIIIIT ****
+}
+
+
+plot_group_freq_series <- function(csv_loc, write_dir = "figures/group_prevalence") {
+
+    df <- read.csv(csv_loc)
+    names(df) <- c("step", "frac_a", "Minority", "Majority", "Ensemble")
+    df <- df[c("step", "Majority", "Minority", "Ensemble")]
+    enslim = 6
+    enslim = 10
+    df <- filter(df, Ensemble <= enslim)
+    df$Ensemble = factor(df$Ensemble, levels = 1:enslim)
+  
+  df <- melt(df, id=c("step", "Ensemble"), value.name = "Frequency", variable.name = "Group")
+
+  ggplot(df, aes(x=step, y=Frequency)) + 
+    geom_line(aes(color=Ensemble, linetype=Group), lwd=0.8) +
+    # geom_line(aes(x=step, y=frac_a_max, color=ensemble, linetype="Majority"), linetype=1, lwd=1.05) +
+    xlab("Step") + ylab(TeX(r"(Adaptation prevalence)")) +
+    # scale_linetype_manual(name = "Group", values=c("Majority", "Minority"), labels = c("Majority", "Minority")) +
+    mytheme #+ guides(color=guide_legend(override.aes=list(fill=NA))) 
+  
+  save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
+  
+  ggsave(save_path, width = 7, height = 4.5)
 }

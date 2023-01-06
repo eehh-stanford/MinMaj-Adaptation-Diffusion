@@ -45,27 +45,31 @@ Random.seed!()
 end
 
 
-@testset "Teacher selection and learning works as expected" begin
+@testset verbose = true "Teacher selection and learning works as expected" begin
 
-    m = cba_model(4; group_1_frac = 0.25, homophily = 1.0, a_fitness = 2.0)
-    
-    @test sample_group(m[1], m) == 1
-    @test sample_group(m[2], m) == 2
-    @test sample_group(m[3], m) == 2
-    @test sample_group(m[4], m) == 2
-
-    # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
-    m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
-                  a_fitness = 1e9)
-    
     ntrials = 10000
-    for aidx in 1:4
-        group_counts = Dict(1 => 0, 2 => 0)
-        for _ in 1:ntrials
-            group_counts[sample_group(m[aidx], m)] += 1
+
+    @testset "Teacher-group and teacher selection works for extreme homophily values" begin
+        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 1.0, homophily_2 = 1.0,
+                      a_fitness = 2.0)
+        
+        @test sample_group(m[1], m) == 1
+        @test sample_group(m[2], m) == 2
+        @test sample_group(m[3], m) == 2
+        @test sample_group(m[4], m) == 2
+
+        # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
+        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
+                         a_fitness = 1e9)
+        
+        for aidx in 1:4
+            group_counts = Dict(1 => 0, 2 => 0)
+            for _ in 1:ntrials
+                group_counts[sample_group(m[aidx], m)] += 1
+            end
+            @test group_counts[1] ≈ ntrials/2.0 rtol=0.1
+            @test group_counts[2] ≈ ntrials/2.0 rtol=0.1
         end
-        @test group_counts[1] ≈ ntrials/2.0 rtol=0.1
-        @test group_counts[2] ≈ ntrials/2.0 rtol=0.1
     end
 
     # Confirm groups are initialized as expected and that teacher selection 
@@ -75,19 +79,18 @@ end
 
     agents = collect(allagents(m))
 
-    group1 = filter(a -> a.group == 1, agents)
-    n_group1 = length(group1)
+    @testset "Groups properly initialized according to group_1_frac" begin
+        group1 = filter(a -> a.group == 1, agents)
+        n_group1 = length(group1)
 
-    group2 = filter(a -> a.group == 2, agents)
-    n_group2 = length(group2)
+        group2 = filter(a -> a.group == 2, agents)
+        n_group2 = length(group2)
 
-    @test n_group1 == 2
-    @test n_group2 == 2
+        @test n_group1 == 2
+        @test n_group2 == 2
+    end
 
-    # Select teacher repeatedly for an agent in each group, check that 
-    # teacher selection has expected statistics.
-    println(rand())
-    for ii in 1:4
+    @testset "Asymmetric homophily produces correct teacher selection stats (Agent $ii)" for ii in 1:4
 
         teachers_selected = [
             select_teacher(m[ii], m, sample_group(m[ii], m))
@@ -107,6 +110,5 @@ end
         end
 
     end
-        
 
 end

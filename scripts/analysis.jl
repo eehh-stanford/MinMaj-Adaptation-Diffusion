@@ -1,5 +1,6 @@
 using CSV
 using DataFrames
+using DrWatson
 using JLD2
 using RCall
 
@@ -263,3 +264,71 @@ function sustainability_vs_homophily(nagents = 100;
 end
 
 
+function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10, 
+        group_1_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, homophily_pairs = 
+            [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
+             (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
+        write_dir = joinpath("data", "group_prevalence")
+    )
+
+    R"""
+    source("scripts/ggplots.R")
+    """
+    
+    for (homophily_1, homophily_2) in homophily_pairs
+
+        println(savename(@dict homophily_1 homophily_2))
+
+        model_kwargs = @dict homophily_1 homophily_2 group_1_frac group_w_innovation a_fitness
+
+        adf, mdf = compare_group_prevalence(nagents; ntrials, model_kwargs...)
+
+        model_kwargs[:nagents] = nagents
+
+        write_file = joinpath(write_dir, 
+                              savename("compare_group_prevalence", model_kwargs, "csv"))
+
+        CSV.write(write_file, adf)
+
+        R"""
+        plot_group_freq_series($write_file)
+        """
+    end
+end
+
+
+
+function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
+    
+    frac_a(v) = sum(v .== a) / length(v)
+
+    is_minority(x) = x.group == 1
+
+    frac_a_ifdata(v) = isempty(v) ? 0.0 : frac_a(collect(v))
+
+    adata = [(:curr_trait, frac_a), 
+             (:curr_trait, frac_a_ifdata, is_minority),
+             (:curr_trait, frac_a_ifdata, !is_minority),
+            ]
+
+    mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
+
+    function stopfn_fixated(model, step)
+        agents = allagents(model)
+
+        return (
+            all(agent.curr_trait == a for agent in agents) ||
+            all(agent.curr_trait == A for agent in agents)
+        )
+    end
+
+    # model = cba_model(nagents; model_kwargs...)
+    models = [cba_model(nagents; model_kwargs...) for _ in 1:ntrials]
+
+    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated; adata, mdata)
+    println(adf)
+
+    rename!(adf, [:step, :frac_a, :frac_a_min, :frac_a_max, :ensemble])
+    
+    return adf, mdf
+end

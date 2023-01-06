@@ -67,12 +67,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     end
 
     # For now ignore non-extremal time steps.
-    if allsteps
-        when(model, step) = true
-    else
-        when(model, step) = stopfn_fixated(model, step)
-    end
-
+    when(model, step) = stopfn_fixated(model, step)
     adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
