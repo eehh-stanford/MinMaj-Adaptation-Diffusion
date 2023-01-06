@@ -1,6 +1,11 @@
-using Test
+using Random, Test
  
 include("../model.jl")
+
+# Somehow seed is constant if this is not included and tests are run through REPL,
+# so we have to set a new one for each time tests are `include`d in REPL.
+Random.seed!()
+
 
 @testset "Groups are initialized as expected" begin
 
@@ -50,32 +55,58 @@ end
     @test sample_group(m[4], m) == 2
 
     # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
-    m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, a_fitness = 1e9)
+    m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
+                  a_fitness = 1e9)
     
-    ntrials = 1e4
+    ntrials = 10000
     for aidx in 1:4
         group_counts = Dict(1 => 0, 2 => 0)
         for _ in 1:ntrials
             group_counts[sample_group(m[aidx], m)] += 1
         end
-
         @test group_counts[1] ≈ ntrials/2.0 rtol=0.1
         @test group_counts[2] ≈ ntrials/2.0 rtol=0.1
     end
 
-    ntrials = 100
+    # Confirm groups are initialized as expected and that teacher selection 
+    # works as expected for asymmetric, non-zero homophily. 
+    m = cba_model(4; group_1_frac = 0.5, homophily_1 = 0.75, 
+                     homophily_2 = 0.25, a_fitness = 1e2)
 
-    m[2].curr_trait = a
-    m[3].curr_trait = A
-    m[4].curr_trait = a
-    for _ in 1:ntrials
-        t = select_teacher(m[2], m, 2)
-        @test t == m[4]
+    agents = collect(allagents(m))
+
+    group1 = filter(a -> a.group == 1, agents)
+    n_group1 = length(group1)
+
+    group2 = filter(a -> a.group == 2, agents)
+    n_group2 = length(group2)
+
+    @test n_group1 == 2
+    @test n_group2 == 2
+
+    # Select teacher repeatedly for an agent in each group, check that 
+    # teacher selection has expected statistics.
+    println(rand())
+    for ii in 1:4
+
+        teachers_selected = [
+            select_teacher(m[ii], m, sample_group(m[ii], m))
+            for _ in 1:ntrials
+        ]
+
+        @test ii ∉ map(a -> a.id, teachers_selected)
+
+        # Contants below multiplying ntrials calculated
+        # from homophily values given above.
+        if ii ∈ [1, 2]
+            @test length(filter(a -> a.group == 1, teachers_selected)) ≈ (0.875 * ntrials) rtol=0.1
+            @test length(filter(a -> a.group == 2, teachers_selected)) ≈ (0.125 * ntrials) rtol=0.1
+        else
+            @test length(filter(a -> a.group == 1, teachers_selected)) ≈ (0.375 * ntrials) rtol=0.1
+            @test length(filter(a -> a.group == 2, teachers_selected)) ≈ (0.625 * ntrials) rtol=0.1
+        end
+
     end
-
-    # TODO write tests of which agents are selected and whether learner learns
-    # teacher's trait. Can use 3-person groups for extreme simplicity. 
-    # GOAL: understand why majority group homophily seems to dominate, when 
-    # it seems like minority group homophily is most important. 
+        
 
 end

@@ -29,7 +29,9 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
                                         collect(0.0:0.05:0.95)..., 0.99
                                        ],
                                        group_1_frac = collect(0.05:0.05:0.5), 
-                                       nreplicates=10, group_w_innovation = 1)
+                                       nreplicates=10, group_w_innovation = 1,
+                                       allsteps = false
+    )
 
     rep_idx = collect(1:nreplicates)
 
@@ -46,8 +48,13 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     # adata = [(:curr_trait, fixated)]
     frac_a(v) = sum(v .== a) / length(v)
 
-    adata = [(:curr_trait, frac_a)]
-    # mdata = [:homophily, :group_1_frac, :rep_idx]
+    is_minority(x) = x.group == 1
+    frac_a_ifdata(v) = isempty(v) ? 0.0 : frac_a(collect(v))
+    adata = [(:curr_trait, frac_a), 
+             (:curr_trait, frac_a_ifdata, is_minority),
+             (:curr_trait, frac_a_ifdata, !is_minority),
+            ]
+
     mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
 
     function stopfn_fixated(model, step)
@@ -60,7 +67,11 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     end
 
     # For now ignore non-extremal time steps.
-    when(model, step) = stopfn_fixated(model, step)
+    if allsteps
+        when(model, step) = true
+    else
+        when(model, step) = stopfn_fixated(model, step)
+    end
 
     adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated;
                             adata, mdata, when, parallel = true, 

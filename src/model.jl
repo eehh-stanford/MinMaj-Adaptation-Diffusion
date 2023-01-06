@@ -84,8 +84,8 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
 
     properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx
 
-    model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
-    flcutoff = floor(group_1_frac * nagents)
+    model = ABM(CBA_Agent, scheduler = Schedulers.fastest; rng = Random.default_rng(), properties)
+    flcutoff = ceil(group_1_frac * nagents)
     group1_cutoff = Int(flcutoff)
     
     for aidx in 1:nagents
