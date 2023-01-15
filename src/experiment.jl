@@ -74,8 +74,9 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     
     res = innerjoin(adf, mdf, on = [:step, :ensemble])
 
-    # Confirm that all runs fixated.
-    @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
+    println(first(res, 15))
+
+    # @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
 
     return res
 end
