@@ -55,7 +55,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
+    mdata = [:a_fitness, :group_1_frac, :nagents, :rep_idx, :homophily_1, :homophily_2]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)
