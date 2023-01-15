@@ -264,15 +264,42 @@ function sustainability_vs_homophily(nagents = 100;
 end
 
 
+"""    
+Create CSV files for heatmap plotting in R.
+"""
+function jld_to_csv_for_asymm_heatmaps(; jld_dir = "data/asymm_jld", 
+                                         csv_dir = "data/asymm_csv")
+
+    for jld_file in readdir(jld_dir; join = true)
+
+        # Load aggregated and merged .jld2 result of asymmetric homophily 
+        # sustainability experiment.
+        df = load(jld_file, "agg")
+
+        write_loc = 
+            joinpath(csv_dir, replace(basename(jld_file), "jld2" => "csv"))
+
+        # Export dataframe to CSV for heatmap plotting in R.
+        CSV.write(write_loc, df)
+    end
+end
+
+
+"""
+Run simulations to understand time series of adaptation prevalence by group.
+"""
 function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10, 
-        group_1_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, homophily_pairs = 
-            [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
-             (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
-        write_dir = joinpath("data", "group_prevalence")
+        group_1_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, 
+        homophily_pairs = [(0.1, 0.1), (0.75, 0.75), (0.99, 0.99)],
+            # [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
+            #  (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
+        csv_write_dir = joinpath("data", "group_prevalence"),
+        base_pdf_write_dir = 
+            joinpath("..", "Writing", "SustainableCBA_Paper", "Figures", "series")
     )
 
     R"""
-    source("scripts/ggplots.R")
+    source("scripts/plot.R")
     """
     
     for (homophily_1, homophily_2) in homophily_pairs
@@ -285,13 +312,15 @@ function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10,
 
         model_kwargs[:nagents] = nagents
 
-        write_file = joinpath(write_dir, 
+        csv_write_file = joinpath(csv_write_dir, 
                               savename("compare_group_prevalence", model_kwargs, "csv"))
 
-        CSV.write(write_file, adf)
+        CSV.write(csv_write_file, adf)
+
+        pdf_write_dir = joinpath(base_pdf_write_dir, string(group_w_innovation))
 
         R"""
-        plot_group_freq_series($write_file)
+        plot_group_freq_series($csv_write_file, write_dir = $pdf_write_dir)
         """
     end
 end
