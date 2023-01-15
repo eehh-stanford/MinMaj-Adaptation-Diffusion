@@ -82,7 +82,14 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
     ngroups = 2
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx
+    if typeof(group_w_innovation) == String
+        if group_w_innovation != "Both"
+            group_w_innovation = parse(Int, group_w_innovation)
+        end
+    end
+
+
+    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(group_1_frac * nagents)
