@@ -69,7 +69,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
   # 
 }
 
-main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figures/heatmaps/main")
+main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figures/heatmaps/main", measure = "sustainability")
 {
   
   # for (group_w_innovation in c(1, 2, "Both")) {
@@ -100,7 +100,9 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figure
   
   for (group_w_innovation in group_w_vals) {
     
-    asymm_heatmap(tbl, group_w_innovation, file.path(write_dir, paste0(group_w_innovation, ".pdf")))
+    asymm_heatmap(tbl, group_w_innovation, 
+                  file.path(write_dir, paste0(group_w_innovation, ".pdf")),
+                  measure)
   }
   
   # for (csv_loc in list.files(csv_dir, full.names = TRUE)) {
@@ -109,7 +111,7 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figure
 }
 
 
-asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path) {
+asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measure = "sustainability") {
   
   asymm_agg <- asymm_tbl %>%
     filter(homophily_1 != 0.99) %>% 
@@ -127,22 +129,47 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path) {
   
   # asymm_lim_aggregated <- asymm_lim_aggregated %>%
   
-  asymm_max_line <-
-    asymm_lim_agg %>% 
-      group_by(homophily_1) %>% 
-      filter(sustainability == max(sustainability))
+  if (measure == "sustainability") {
   
-  print(asymm_max_line)
-  max_sustainability <- 
-    asymm_max_line[asymm_max_line$sustainability == 
-                     max(asymm_max_line$sustainability), ]
+    asymm_max_line <-
+      asymm_lim_agg %>% 
+        group_by(homophily_1) %>% 
+        filter(sustainability == max(sustainability))
+    
+    print(asymm_max_line)
+    max_sustainability <- 
+      asymm_max_line[asymm_max_line$sustainability == 
+                       max(asymm_max_line$sustainability), ]
+  } else if (measure == "step") {
+    asymm_max_line <-
+      asymm_lim_agg %>% 
+      group_by(homophily_1) %>% 
+      filter(step == max(step))
+    
+    print(asymm_max_line)
+    max_sustainability <- 
+      asymm_max_line[asymm_max_line$step == 
+                       max(asymm_max_line$step), ]
+  } else {
+    stop ("measure not recognized")
+  }
   
   h1max <- max_sustainability$homophily_1
   h2max <- max_sustainability$homophily_2
   
-  print(paste("Maximum sustainability ", max_sustainability$sustainability[1], ", at h1 = ", h1max, " h2 = ", h2max))
+  # print(paste("Maximum sustainability ", max_sustainability$sustainability[1], ", at h1 = ", h1max, " h2 = ", h2max))
   
-  ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability)) + 
+  if (measure == "sustainability") {
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
+    measure_label <- "Sustainability"
+  } else if (measure == "step") {
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
+    measure_label <- "Mean steps"
+  } else {
+    stop("Measure not recognized.")
+  }
+  
+   ggplotstart + 
     geom_tile() +
     scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF") +
     geom_point(data = asymm_max_line, aes(x = homophily_1, y = homophily_2)) +
@@ -150,7 +177,7 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path) {
     geom_point(data = max_sustainability, aes(x=homophily_1, y=homophily_2), 
                shape='diamond', size=5, color='red') +
     labs(x = "Minority group homophily", y = "Majority group homophily") +
-    coord_fixed() + labs(fill = "Sustainability") +
+    coord_fixed() + labs(fill = measure_label) +
     mytheme
     
   # save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
