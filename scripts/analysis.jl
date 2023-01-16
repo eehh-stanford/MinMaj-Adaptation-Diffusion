@@ -6,7 +6,7 @@ using RCall
 
 include("../src/experiment.jl")
 
-using Cairo, Fontconfig, Gadfly, Compose
+using Cairo, Fontconfig, Gadfly, Compose, Glob
 
 using Colors
 logocolors = Colors.JULIA_LOGO_COLORS
@@ -233,7 +233,6 @@ function sustainability_vs_homophily(nagents = 100;
         res = homophily_minority_experiment(nagents; 
                                             nreplicates, group_1_frac, 
                                             a_fitness, group_w_innovation)
-        println(first(res, 10))
 
         # Group by homophily, calculate the mean sustainability and 
         # time to convergence across replicates for each homophily value.
@@ -360,4 +359,43 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
     rename!(adf, [:step, :frac_a, :frac_a_min, :frac_a_max, :ensemble])
     
     return adf, mdf
+end
+
+
+function make_full_asymm_data(partition_dir = "data/main_parts", output_dir = "data/main"; supplement = false)
+
+    part_files = readdir(partition_dir; join = true)
+
+    # How to read over all filenames and make corresponding heatmaps?
+    # Probably doing groupbys on a df of all CSV files in the main/ directory, 
+    # then saving back to .csv, similar to how it
+    # works in jld_to_csv above, then in R we just read the filename and it's agnostic
+    # about the model parameters–it just makes a heatmap.
+    
+    # Main results (default) parameters
+    nagents = 1000
+    group_1_frac = 0.05
+    a_fitness = 1.2
+    
+    # For supplement find rows that are not the default values for each 
+    # dimension's sensitivity analysis.
+    if supplement
+        # nagents sensitivty
+        for nagents in [50, 100, 200]
+        
+        end
+
+        # f(a) sensitivity
+        for a_fitness in [1.05, 1.4, 2.0]
+            
+        end
+
+        # minority size sensitivity
+        for group_1_frac in [0.2, 0.35, 0.5]
+            
+        end
+    else
+        # df = CSV.read(files)
+
+    end
 end
