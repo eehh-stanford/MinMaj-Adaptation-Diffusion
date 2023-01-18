@@ -161,7 +161,7 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
   
   if (measure == "sustainability") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
-    measure_label <- "Sustainability"
+    measure_label <- "Sweep frequency"
   } else if (measure == "step") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
     measure_label <- "Mean steps"
