@@ -51,6 +51,11 @@ function parse_cli()
             help = "Population size, N"
             default = 100
             arg_type = Int
+
+        "--biased_assimilation", "-b"
+            help = "Biased assimilation"
+            default = 0.0
+            arg_type = Float64
     end
 
     return parse_args(s)

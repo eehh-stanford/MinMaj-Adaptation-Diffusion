@@ -66,17 +66,26 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
     # Agent samples randomly from one of the groups, weighted by homophily.
     group = sample_group(focal_agent, model)
 
-    #
-    teacher = select_teacher(focal_agent, model, group)
+    # Biased assimilation.
+    if (model.biased_assimilation > 0.0 && 
+            group != focal_agent.group && 
+            rand() < model.biased_assimilation)
 
-    # Learn from teacher.
-    focal_agent.next_trait = deepcopy(teacher.curr_trait) 
+        # Select and learn from a teacher in selected group.
+        teacher = select_teacher(focal_agent, model, group)
+        focal_agent.next_trait = deepcopy(teacher.curr_trait) 
+    else
+        # Probably don't need to deepcopy, but just making double sure this 
+        # works as expected.
+        focal_agent.next_trait = deepcopy(focal_agent.curr_trait)
+    end
 end
 
 
 function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
                                   homophily_1 = 1.0, homophily_2 = 1.0, 
+                                  biased_assimilation = 0.0, 
                                   rep_idx = nothing, model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)

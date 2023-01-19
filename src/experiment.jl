@@ -28,6 +28,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
                                        homophily = [
                                         collect(0.0:0.05:0.95)..., 0.99
                                        ],
+                                       biased_assimilation = 0.0,
                                        group_1_frac = collect(0.05:0.05:0.5), 
                                        nreplicates=10, group_w_innovation = 1,
                                        allsteps = false
@@ -55,7 +56,8 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :group_1_frac, :nagents, :rep_idx, :homophily_1, :homophily_2]
+    mdata = [:a_fitness, :group_1_frac, :nagents, :rep_idx, :homophily_1, 
+             :homophily_2, :biased_assimilation]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)
