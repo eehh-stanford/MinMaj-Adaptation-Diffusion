@@ -67,9 +67,9 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
     group = sample_group(focal_agent, model)
 
     # Biased assimilation.
-    if (model.biased_assimilation > 0.0 && 
-            group != focal_agent.group && 
-            rand() < model.biased_assimilation)
+    if ((model.biased_assimilation > 0.0) && 
+            (group != focal_agent.group) && 
+            (rand() < (1 - model.biased_assimilation)))
 
         # Select and learn from a teacher in selected group.
         teacher = select_teacher(focal_agent, model, group)
@@ -98,7 +98,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     end
 
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
+    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents biased_assimilation
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(group_1_frac * nagents)
@@ -128,8 +128,9 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
             homophily = homophily_2
 
             # Determine whether the agent should start with innovation or not.
-            if (((group_w_innovation == 2) || (group_w_innovation == "Both")) 
-                && (aidx == group1_cutoff + 1))
+            if (((group_w_innovation == 2) || 
+                (group_w_innovation == "Both")) && 
+                (aidx == group1_cutoff + 1))
 
                 trait = a
             else
