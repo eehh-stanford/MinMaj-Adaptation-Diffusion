@@ -1,4 +1,4 @@
-# Social factors in community-based adaptation sustainability
+# Minority-group incubators and majority-group reservoirs for climate change adaptation
 
 This repository contains code and supporting documentation for Jones lab's work
 identifying the effect of various social, cultural, and technological factors on
