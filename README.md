@@ -24,7 +24,7 @@ julia> using Pkg; Pkg.activate("."); Pkg.instantiate()
 
 ## Unit tests
 
-We developed our model using test-driven development which resulted in numerous unit tests that both confirm the model works as expected and to document model mechanics; see [`src/test/model.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/src/test/model.jl) to view the test suite.
+We developed our model using test-driven development, which uses small, executable code snippets to confirm the model works as expected and to document model mechanics; see [`src/test/model.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/src/test/model.jl) to view the test suite.
 
 While still in the REPL, run the unit tests to make sure all is working well:
 
