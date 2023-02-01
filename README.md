@@ -1,9 +1,6 @@
 # Minority-group incubators and majority-group reservoirs for climate change adaptation
 
-This repository contains code and supporting documentation for Jones lab's work
-identifying the effect of various social, cultural, and technological factors on
-the sustainability of community-based adaptations. For more details on how the
-model works, see the final section in this README.
+This repository contains code and supporting documentation for the agent-based model analyzed in our paper, "Minority-group incubators and majority-group reservoirs for climate change adaptation".
 
 
 ## Quick start
