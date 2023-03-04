@@ -1,9 +1,6 @@
-# Social factors in community-based adaptation sustainability
+# Minority-group incubators and majority-group reservoirs for climate change adaptation
 
-This repository contains code and supporting documentation for Jones lab's work
-identifying the effect of various social, cultural, and technological factors on
-the sustainability of community-based adaptations. For more details on how the
-model works, see the final section in this README.
+This repository contains code and supporting documentation for the agent-based model analyzed in our paper, "Minority-group incubators and majority-group reservoirs for climate change adaptation".
 
 
 ## Quick start
@@ -22,6 +19,10 @@ After cloning the repository, install all dependencies by first starting the
 julia> using Pkg; Pkg.activate("."); Pkg.instantiate()
 ```
 
+## Unit tests
+
+We developed our model using test-driven development, which uses small, executable code snippets to confirm the model works as expected and to document model mechanics; see [`src/test/model.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/src/test/model.jl) to view the test suite.
+
 While still in the REPL, run the unit tests to make sure all is working well:
 
 ```
@@ -34,48 +35,26 @@ are as expected.
 
 # Run the model and analyze results
 
-The code is separated in two main components: (1) model runs over the model
-parameter space; and (2) analyzing model outputs. Create a directory, `plots/outline`, in order to save output plots from the script run as follows.
+## Model and computational experiments
 
-To run the model with a given number of agents, group size, and fitness value of trait $a$, for
-a given number of replicates and homophily values, you can use the `sustainability_vs_homophily`
-function in the [scripts/outline_analysis.jl](/scripts/outline_analysis.jl) file. This function will 
-run the `homophily_minority_experiment` in [/src/experiment.jl](/src/experiment.jl). This
-function will automatically process output data from the `homophily_minority_experiment` for plotting
-"sustainability" over each tested homophily value. Sustainability is calculated as the fraction of 
-trials that had $a$ go to fixation (adopted by entire population) for the relevant parameter batch. 
+The model is implemented in [`src/model.jl`](src/model.jl) and the computational experiments that run the model over all parameter settings for the desired number of trials and used by the Slurm scripts (below) is in [`src/experiment.jl`](src/experiment.jl).
 
-Currently, one must manually run `sustainability_vs_homophily` over each desired value of $f(a)$, each 
-minority size setting, and start the adaptive trait in both the minority and majority groups in each case
-to reproduce the figures in our current outline. This process is in the process of being automated.
+## Run all simulations on Slurm cluster
 
-After that is done, one can use the `sustainability_comparison` function (also in [/scripts/outline_analysis.jl](/scripts/outline_analysis.jl)) to plot the data. The data currently are set by default to be saved to `data/outline`. Note in the `sustainability_function` that the four $f(a)$ values must match those currently presented in our outline.
+To run simulations on a Slurm cluster, log in to the cluster then execute the following commands from the project directory, first
+```
+./scripts/slurm/main.sh
+```
+to run the main analyses, and
+```
+./scripts/slurm/supplement.sh
+```
+to run the supplemental analyses. This creates a fresh, distinct version of simulation results that can be analyzed as we explain below, using archived data of the simulations used to create our results in the submitted version of the paper.
 
-## Computational experiments for a batch of parameters
+## Analysis
 
-A computational experiment involves running a model over many parameter settings, which we could call a batch of parameters. In this code we use the [`ensemblerun!` function provided by Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/api/#Agents.ensemblerun!).
+Use `main_asymm_heatmaps` to create the main heatmap results of _success rate_ as a function of $h_\mathrm{min}$ and $h_\mathrm{maj}$, which can be found in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L72). For creating the heatmaps of average time to model fixation, pass the keyword argument `measure = "step"` to `main_asymm_heatmaps`. Similarly, to create supplemental analyses use the `supp_asymm_heatmaps` function in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L15).
 
-## Single-parameter setting model runs
+To create the heatmaps you need the output data from the simulations presented in our journal article, stored in the `data` folder in the root project directory. To get the data in the right place, first create a `data` directory, then download and unzip the two zip files in our OSF repository: https://osf.io/cd9hx/. 
 
-We can run models one at a time, or in batches according to sets of parameters
-to systematically vary to understand their effect on agent behavior and model
-outcomes. To do this, initialize a model using the [`cba_model` function](https://github.com/mt-digital/SustainableCBA/blob/main/src/model.jl#L72) in [/src/model.jl](/src/model.jl).
-
-
-# Model motivation and operation
-
-We developed this model to understand how group structure might affect the
-sustainability of community-based adaptations (CBAs). Community-based
-adaptations seek to build grassroots adaptive capacity to environmental change,
-especially in response to climate change. Group structure is operationalized 
-as homophily and relative group size. We want to understand how group
-structure affects the evolution of a beneficial
-adaptation in a meta-population composed of two groups. 
-
-## Model
-
-We model people as computational _agents_ in this agent-based model.
-The model assumes there are two groups of $N$ agents total. One group is the
-minority with $mN$ agents, and the majority has $(1-m)N$ agents. The 
-probability that agents interact with one another is determined via the 
-global _homophily_, $h$. (More details to come; for now see model details by viewing [/src/model.jl](/src/model.jl).
+To create time series of individual model runs, use the `make_all_group_prevalence_comparisons` function in [`scripts/analysis.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/analysis.jl#L290).
