@@ -69,7 +69,9 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
   # 
 }
 
-main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figures/heatmaps/main", measure = "sustainability")
+main_asymm_heatmaps <- function(csv_dir = "data/main_parts", 
+                                write_dir = "figures/heatmaps/main", 
+                                measure = "sustainability")
 {
   
   # for (group_w_innovation in c(1, 2, "Both")) {
@@ -161,10 +163,10 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
   
   if (measure == "sustainability") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
-    measure_label <- "Sweep frequency"
+    measure_label <- "Success\nrate"
   } else if (measure == "step") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
-    measure_label <- "Mean steps"
+    measure_label <- "Mean\nsteps"
   } else {
     stop("Measure not recognized.")
   }
@@ -173,10 +175,11 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
     geom_tile() +
     scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF") +
     geom_point(data = asymm_max_line, aes(x = homophily_1, y = homophily_2)) +
-    geom_smooth(data = asymm_max_line, aes(x = homophily_1, y = homophily_2), se=FALSE) +
+    geom_smooth(data = asymm_max_line, aes(x = homophily_1, y = homophily_2), se=FALSE, n = 5) +
     geom_point(data = max_sustainability, aes(x=homophily_1, y=homophily_2), 
                shape='diamond', size=5, color='red') +
-    labs(x = "Minority group homophily", y = "Majority group homophily") +
+    labs(x = TeX("Minority group homophily, $h_{min}$"), 
+         y = TeX("Majority group homophily, $h_{maj}$")) +
     coord_fixed() + labs(fill = measure_label) +
     mytheme
     
