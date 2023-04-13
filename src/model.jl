@@ -27,40 +27,6 @@ function model_step!(model)
 end
 
 
-function sample_group(focal_agent, model)
-
-    weights = zeros(2)
-
-    # XXX a waste to calculate this every time.
-    agent_group_weight = (1 + focal_agent.homophily) / 2.0
-
-    weights[focal_agent.group] = agent_group_weight
-    weights[1:end .!= focal_agent.group] .= 1 - agent_group_weight
-    
-    return sample(Weights(weights)) 
-end
-
-
-function select_teacher(focal_agent, model, group)
-
-    ## Begin payoff-biased social learning from teacher within selected group.
-    prospective_teachers = 
-        filter(agent -> (agent.group == group) && (agent != focal_agent), 
-               collect(allagents(model)))
-
-    teacher_weights = 
-        map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-                              prospective_teachers)
-
-    # Renormalize weights.
-    denom = Float64(sum(teacher_weights))
-    teacher_weights ./= denom
-
-    # Select teacher.
-    return sample(prospective_teachers, Weights(teacher_weights))
-end
-
-
 function agent_step!(focal_agent::CBA_Agent, model::ABM)
 
     # Agent samples randomly from one of the groups, weighted by homophily.
@@ -98,15 +64,15 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     for aidx in 1:nagents
 
         # For now we assume two groups and one or two agents have de novo innovation.
-        if aidx ≤ group1_cutoff
+        if aidx ≤ group1_cutoff 
 
             # Set group membership and homophily.
-            group = 1
+            group = 1 
             homophily = homophily_1
 
             # Determine whether the agent should start with innovation or not.
             if (((group_w_innovation == 1) || (group_w_innovation == "Both")) 
-                && (aidx == 1))
+                && (aidx == 1)) 
 
                 trait = a
             else
@@ -120,12 +86,12 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
 
             # Determine whether the agent should start with innovation or not.
             if (((group_w_innovation == 2) || (group_w_innovation == "Both")) 
-                && (aidx == group1_cutoff + 1))
+                && (aidx == group1_cutoff + 1)) 
 
                 trait = a
             else
                 trait = A
-            end
+            end 
         end
         
         agent_to_add = CBA_Agent(aidx, trait, trait, group, homophily)
@@ -137,3 +103,39 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
 
     return model
 end
+
+
+function sample_group(focal_agent, model)
+
+    weights = zeros(2)
+
+    # XXX a waste to calculate this every time.
+    agent_group_weight = (1 + focal_agent.homophily) / 2.0
+
+    weights[focal_agent.group] = agent_group_weight
+    weights[1:end .!= focal_agent.group] .= 1 - agent_group_weight
+    
+    return sample(Weights(weights)) 
+end
+
+
+function select_teacher(focal_agent, model, group)
+
+    ## Begin payoff-biased social learning from teacher within selected group.
+    prospective_teachers = 
+        filter(agent -> (agent.group == group) && (agent != focal_agent), 
+               collect(allagents(model)))
+
+    teacher_weights = 
+        map(agent -> model.trait_fitness_dict[agent.curr_trait], 
+                              prospective_teachers)
+
+    # Renormalize weights.
+    denom = Float64(sum(teacher_weights))
+    teacher_weights ./= denom
+
+    # Select teacher.
+    return sample(prospective_teachers, Weights(teacher_weights))
+end
+
+

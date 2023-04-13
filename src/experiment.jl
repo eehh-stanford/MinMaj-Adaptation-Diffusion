@@ -4,8 +4,6 @@ using Distributed
 using StatsBase
 
 
-
-
 # Set up multiprocessing.
 try
     num_cores = parse(Int, ENV["SLURM_CPUS_PER_TASK"])
@@ -51,17 +49,17 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     is_minority(x) = x.group == 1
     frac_a_ifdata(v) = isempty(v) ? 0.0 : frac_a(collect(v))
     adata = [(:curr_trait, frac_a), 
-             (:curr_trait, frac_a_ifdata, is_minority),
+             (:curr_trait, frac_a_ifdata, is_minor ity),
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
     mdata = [:a_fitness, :group_1_frac, :nagents, :rep_idx, :homophily_1, :homophily_2]
 
     function stopfn_fixated(model, step)
-        agents = allagents(model)
+        agents = allagents(model) 
 
         return (
-            all(agent.curr_trait == a for agent in agents) ||
+            all(agent.curr_trait == a for agent in agents) || 
             all(agent.curr_trait == A for agent in agents)
         )
     end
