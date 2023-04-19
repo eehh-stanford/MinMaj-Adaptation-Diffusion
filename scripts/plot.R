@@ -12,6 +12,91 @@ mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 # axis.text.y=  element_text(size=12), 
                 panel.background = element_rect(fill = "white"))
 
+
+group_start_remap <- function(group_start) {
+  if (group_start == "1")
+    return ("Minority")
+  else if (group_start == "2")
+    return ("Majority")
+  else
+    return ("Both")
+}
+
+
+success_over_groups_boxplot <- function(
+  csv_dirs = c("data/main_parts", "data/supp_parts"), 
+  write_path = "figures/success_over_groups_boxplot.pdf", 
+  minority_pop_sizes = c(0.05, 0.2, 0.5)) {
+
+  full_df <- load_from_parts(csv_dirs, "data/success_over_groups_boxplot.csv")
+
+  # Need each outcome for every homophily value separated.
+  aggdf <- full_df %>%
+    filter(group_1_frac %in% minority_pop_sizes) %>%
+    group_by(homophily_1, homophily_2, group_w_innovation, group_1_frac) %>%
+    summarize(success_rate = mean(frac_a_curr_trait))
+
+  aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
+  aggdf$group_1_frac <- factor(aggdf$group_1_frac)
+
+  aggdf <- rename(aggdf, start_group = group_w_innovation, 
+                         minority_group_size = group_1_frac,
+                         h_min = homophily_1, h_maj = homophily_2)
+
+  # Now create boxplot with start group on x-axis, success_rate on y-axis, 
+  # and color-coded by minority group size.
+  p <- ggplot(aggdf, aes(x = factor(start_group, 
+                                    level=c("Majority", "Minority", "Both")), 
+                         y = success_rate)) + 
+         geom_boxplot(aes(color = minority_group_size)) +
+         xlab("Start group") + ylab("Success rate") + 
+         scale_color_discrete("Min. group size") +
+         mytheme
+
+  ggsave(write_path)
+
+  return (p)
+}
+
+
+steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
+                                              write_path = "figures/steps_over_groups_success_failure_boxplot.pdf", minority_pop_sizes = c(0.05)) {
+
+  full_df <- load_from_parts(csv_dirs, "data/steps_over_groups_boxplot.csv")
+
+  success_remap <- function(frac_a_curr_trait) {
+    if (frac_a_curr_trait == 1.0)
+      return ("Success")
+    else
+      return ("Failure")
+  }
+
+  full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
+  
+  aggdf <- full_df %>%
+    filter(group_1_frac %in% minority_pop_sizes) %>%
+    group_by(homophily_1, homophily_2, group_w_innovation, success) %>%
+    summarize(step = mean(step))
+
+  aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
+
+  aggdf <- rename(aggdf, start_group = group_w_innovation, 
+                         h_min = homophily_1, h_maj = homophily_2)
+
+  p <- ggplot(aggdf, aes(x = factor(start_group, 
+                                    level=c("Majority", "Minority", "Both")),
+                         y = step)) +
+         geom_boxplot(aes(color = success)) + 
+         xlab("Start group") + ylab("Mean steps to fixation") +
+         scale_color_discrete("Fixation status") + 
+         mytheme
+
+  ggsave(write_path)
+
+  return (p)
+}
+
+
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
   group_w_vals <- c("1", "2", "Both")
   
@@ -68,6 +153,58 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
   
   # 
 }
+
+
+load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
+                            sync_file = NULL) {
+
+  group_w_vals <- c("1", "2", "Both")
+
+  if (!is_null(sync_file)) {
+    if (file.exists(sync_file)) {
+      return (read_csv(sync_file))
+    }
+  }
+
+  for (group_w_innovation in group_w_vals) {
+    
+    dir_idx = 1
+
+    for (dd in csv_dirs) {
+      files_part <- list.files(dd, 
+                 pattern = paste0("group_w_innovation=", group_w_innovation),
+                 full.names = TRUE)
+      if (dir_idx == 1) {
+        files <- files_part 
+      }
+      else {
+        files <- rbind(files, files_part)
+      }
+    }
+    
+    tbl_part <- files %>%
+      map_df(~read_csv(., show_col_types = FALSE))
+    
+    tbl_part$group_w_innovation = group_w_innovation
+    
+    if (group_w_innovation == "1") {
+      tbl <- tbl_part
+    }
+    else {
+      tbl <- rbind(tbl, tbl_part)
+    }
+  }
+
+  # If we got here and the sync_file is not null, then there was no sync_file
+  # to read and we create it now to sync the full output dataframe.
+  if (!is_null(sync_file)) {
+    write_csv(tbl, sync_file)
+  }
+
+  return (tbl)
+}
+                            
+
 
 main_asymm_heatmaps <- function(csv_dir = "data/main_parts", 
                                 write_dir = "figures/heatmaps/main", 
@@ -129,8 +266,6 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
   print(unique(asymm_lim_agg$group_w_innovation))
   print(head(asymm_lim_agg))
   
-  # asymm_lim_aggregated <- asymm_lim_aggregated %>%
-  
   if (measure == "sustainability") {
   
     asymm_max_line <-
@@ -158,8 +293,6 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
   
   h1max <- max_sustainability$homophily_1
   h2max <- max_sustainability$homophily_2
-  
-  # print(paste("Maximum sustainability ", max_sustainability$sustainability[1], ", at h1 = ", h1max, " h2 = ", h2max))
   
   if (measure == "sustainability") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
