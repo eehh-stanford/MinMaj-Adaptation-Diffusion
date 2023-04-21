@@ -22,6 +22,47 @@ group_start_remap <- function(group_start) {
     return ("Both")
 }
 
+success_over_groups_violin <- function(
+    csv_dirs = c("data/main_parts"),# "data/supp_parts"), 
+    write_path = "figures/success_over_groups_violin.pdf"
+    # , minority_pop_sizes = c(0.05, 0.2, 0.5)
+    ) {
+  
+  full_df <- load_from_parts(csv_dirs, "data/success_over_groups_violin.csv")
+  print(full_df)
+  
+  # Need each outcome for every homophily value separated.
+  aggdf <- full_df %>%
+    # filter(group_1_frac %in% minority_pop_sizes) %>%
+    group_by(homophily_1, homophily_2, group_w_innovation, group_1_frac) %>%
+    summarize(success_rate = mean(frac_a_curr_trait))
+  
+  aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
+  aggdf$group_1_frac <- factor(aggdf$group_1_frac)
+  
+  aggdf <- rename(aggdf, start_group = group_w_innovation, 
+                  minority_group_size = group_1_frac,
+                  h_min = homophily_1, h_maj = homophily_2)
+  
+  # Now create boxplot with start group on x-axis, success_rate on y-axis, 
+  # and color-coded by minority group size.
+  p <- ggplot(aggdf, aes(x = factor(start_group, 
+                                    level=c("Majority", "Minority", "Both")), 
+                         y = success_rate)) + 
+    geom_violin() + 
+    geom_jitter(alpha=0.1, width=0.2) +
+    stat_summary(fun=mean, geom="line", color="#02bec3", size=1.5, aes(group=1)) +
+    stat_summary(fun=mean, geom="point", shape=23, size=4, fill="#02bec3") +
+    xlab("Start group") + ylab("Success rate") + 
+    # scale_color_discrete("Legend") +
+    mytheme
+  
+  ggsave(write_path, width=7, height=5)
+  
+  return (p)
+}
+
+
 
 success_over_groups_boxplot <- function(
   csv_dirs = c("data/main_parts", "data/supp_parts"), 
@@ -29,6 +70,7 @@ success_over_groups_boxplot <- function(
   minority_pop_sizes = c(0.05, 0.2, 0.5)) {
 
   full_df <- load_from_parts(csv_dirs, "data/success_over_groups_boxplot.csv")
+  print(full_df)
 
   # Need each outcome for every homophily value separated.
   aggdf <- full_df %>%
@@ -59,43 +101,81 @@ success_over_groups_boxplot <- function(
 }
 
 
+# steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
+#                                               write_path = "figures/steps_over_groups_success_failure_boxplot.pdf", minority_pop_sizes = c(0.05)) {
+# 
+#   full_df <- load_from_parts(csv_dirs, "data/steps_over_groups_boxplot.csv")
+# 
+#   success_remap <- function(frac_a_curr_trait) {
+#     if (frac_a_curr_trait == 1.0)
+#       return ("Success")
+#     else
+#       return ("Failure")
+#   }
+# 
+#   full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
+#   
+#   aggdf <- full_df %>%
+#     filter(group_1_frac %in% minority_pop_sizes) %>%
+#     group_by(homophily_1, homophily_2, group_w_innovation, success) %>%
+#     summarize(step = mean(step))
+# 
+#   aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
+# 
+#   aggdf <- rename(aggdf, start_group = group_w_innovation, 
+#                          h_min = homophily_1, h_maj = homophily_2)
+# 
+#   p <- ggplot(aggdf, aes(x = factor(start_group, 
+#                                     level=c("Majority", "Minority", "Both")),
+#                          y = step)) +
+#          # geom_boxplot(aes(color = success)) + 
+#     # geom_violin(aes(color = success)) + 
+#     geom_jitter(alpha=0.5, width=0.2, aes(color=success)) +
+#     # stat_summary(fun=mean, geom="line", color="#02bec3", size=1.5, aes(group=1)) +
+#     # stat_summary(fun=mean, geom="point", shape=23, size=4, fill="#02bec3") +
+#          xlab("Start group") + ylab("Mean steps to success/failure") +
+#          scale_color_discrete("Status") + 
+#          guides(colour = guide_legend(override.aes = list(size=5))) +
+#          mytheme
+# 
+#   ggsave(write_path, width=7, height=5)
+# 
+#   return (p)
+# }
+
 steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
                                               write_path = "figures/steps_over_groups_success_failure_boxplot.pdf", minority_pop_sizes = c(0.05)) {
-
+  
   full_df <- load_from_parts(csv_dirs, "data/steps_over_groups_boxplot.csv")
-
+  
   success_remap <- function(frac_a_curr_trait) {
     if (frac_a_curr_trait == 1.0)
       return ("Success")
     else
       return ("Failure")
   }
+    full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
+# full_df
+    aggdf <- full_df %>%
+      filter(group_1_frac %in% minority_pop_sizes) %>%
+      group_by(group_w_innovation, success) %>%
+      summarize(step = mean(step))
+    
+    aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
 
-  full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
-  
-  aggdf <- full_df %>%
-    filter(group_1_frac %in% minority_pop_sizes) %>%
-    group_by(homophily_1, homophily_2, group_w_innovation, success) %>%
-    summarize(step = mean(step))
-
-  aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
-
-  aggdf <- rename(aggdf, start_group = group_w_innovation, 
-                         h_min = homophily_1, h_maj = homophily_2)
-
-  p <- ggplot(aggdf, aes(x = factor(start_group, 
-                                    level=c("Majority", "Minority", "Both")),
-                         y = step)) +
-         geom_boxplot(aes(color = success)) + 
-         xlab("Start group") + ylab("Mean steps to fixation") +
-         scale_color_discrete("Fixation status") + 
-         mytheme
-
-  ggsave(write_path)
-
-  return (p)
+      aggdf <- rename(aggdf, start_group = group_w_innovation)
+    aggdf$success <- factor(aggdf$success)
+    ggplot(aggdf, aes(x = factor(start_group,
+                                level=c("Majority", "Minority", "Both")),
+                      y=step, group=success)) +
+      geom_line(aes(color=success), size=1.5) +
+      geom_point(aes(color=success), shape='diamond', size=5) +
+      xlab("Start group") + ylab("Mean steps to fail/success") + 
+      scale_color_discrete("Status") +
+      mytheme
+    
+    ggsave(write_path, width=7, height=4.25)
 }
-
 
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
   group_w_vals <- c("1", "2", "Both")
@@ -297,16 +377,18 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
   if (measure == "sustainability") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
     measure_label <- "Success\nrate"
+    limits <- c(0.0, 0.8)
   } else if (measure == "step") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
     measure_label <- "Mean\nsteps"
+    limits = NULL
   } else {
     stop("Measure not recognized.")
   }
   
    ggplotstart + 
     geom_tile() +
-    scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF") +
+    scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF", limits = limits) +
     geom_point(data = asymm_max_line, aes(x = homophily_1, y = homophily_2)) +
     geom_smooth(data = asymm_max_line, aes(x = homophily_1, y = homophily_2), se=FALSE, n = 5) +
     geom_point(data = max_sustainability, aes(x=homophily_1, y=homophily_2), 
