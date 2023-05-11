@@ -26,14 +26,15 @@ group_start_remap <- function(group_start) {
 
 success_over_groups_jitter <- function(
     csv_dirs = c("data/main_parts"),
-    write_path = "figures/success_over_groups_jitter.pdf"
+    write_dir = "figures",
+    write_filename = "success_over_groups_jitter.pdf"
   ) {
   
   full_df <- load_from_parts(csv_dirs, "data/success_over_groups_jitter.csv")
+  write_path <- file.path(write_dir, write_filename)
   
   # Need each outcome for every homophily value separated.
   aggdf <- full_df %>%
-    # filter(group_1_frac %in% minority_pop_sizes) %>%
     group_by(homophily_1, homophily_2, group_w_innovation, group_1_frac) %>%
     summarize(success_rate = mean(frac_a_curr_trait))
   
@@ -57,7 +58,7 @@ success_over_groups_jitter <- function(
     # scale_color_discrete("Legend") +
     mytheme
   
-  ggsave(write_path, width=7, height=5)
+  ggsave(write_path, width=6, height=3.75)
   
   return (p)
 }
@@ -87,9 +88,13 @@ point_for_jitter_legend <- function(write_path = "figures/jitter_legend_point.pd
 
 
 steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
-                                              write_path = "../Writing/SustainableCBA/Figures/steps_over_groups_success_failure.pdf", minority_pop_sizes = c(0.05)) {
+                                              write_dir = "figures/",
+                                              write_filename = "steps_over_groups_success_failure.pdf", 
+                                              minority_pop_sizes = c(0.05)) {
   
   full_df <- load_from_parts(csv_dirs, "data/steps_over_groups.csv")
+  
+  write_path <- file.path(write_dir, write_filename)
   
   success_remap <- function(frac_a_curr_trait) {
     if (frac_a_curr_trait == 1.0)
@@ -116,14 +121,14 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
                       y=step, group=Status)) +
       geom_line(aes(color=Status), size=1.5) +
       geom_point(aes(fill=Status, shape=Status), color='black', size=5, stroke=1.1) +
-      xlab("Start group") + ylab("Mean steps to failure/success") + 
+      xlab("Start group") + ylab("Mean steps to\nsuccess/failure") + 
       # scale_color_discrete("Status") +
       scale_shape_manual(values = c(21,24), breaks=c("Success", "Failure")) +
       scale_color_discrete(limits=c("Success", "Failure"), type=color_values) +
       scale_fill_discrete(limits=c("Success", "Failure"), type = color_values) +
       mytheme
     
-    ggsave(write_path, width=7.5, height=4.75)
+    ggsave(write_path, width=7, height=3.25)
     
     return(p)
 }
