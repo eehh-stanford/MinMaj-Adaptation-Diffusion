@@ -89,7 +89,8 @@ point_for_jitter_legend <- function(write_path = "figures/jitter_legend_point.pd
 
 steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
                                               write_dir = "figures/",
-                                              write_filename = "steps_over_groups_success_failure.pdf", 
+                                              write_filename = 
+                                                "steps_over_groups_success_failure.pdf", 
                                               minority_pop_sizes = c(0.05)) {
   
   full_df <- load_from_parts(csv_dirs, "data/steps_over_groups.csv")

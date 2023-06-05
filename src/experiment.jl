@@ -49,7 +49,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     is_minority(x) = x.group == 1
     frac_a_ifdata(v) = isempty(v) ? 0.0 : frac_a(collect(v))
     adata = [(:curr_trait, frac_a), 
-             (:curr_trait, frac_a_ifdata, is_minor ity),
+             (:curr_trait, frac_a_ifdata, is_minority),
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
@@ -73,8 +73,6 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
     res = innerjoin(adf, mdf, on = [:step, :ensemble])
 
     println(first(res, 15))
-
-    # @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
 
     return res
 end
