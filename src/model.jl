@@ -145,11 +145,7 @@ end
 
 function fitness_adjustment(group_freq; group_freq_midpoint = 0.5, b = 1)
 
-    # r = -log10(2) / log10(group_freq_midpoint)
     r = -log10(2) / log10(group_freq_midpoint)
-
-    # num = (1 - (group_freq^r))^(-b)
-    # den = num + (group_freq^(-r*b))
 
     num = group_freq^(r*b)
     den = num + (1-(group_freq^r))^b
