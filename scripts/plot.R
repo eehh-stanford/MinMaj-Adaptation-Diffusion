@@ -25,12 +25,20 @@ group_start_remap <- function(group_start) {
 
 
 success_over_groups_jitter <- function(
-    csv_dirs = c("data/main_parts"),
+    csv_dirs = c("data/main_parts"), 
     write_dir = "figures",
-    write_filename = "success_over_groups_jitter.pdf"
+    write_filename = "success_over_groups_jitter.pdf",
+    tbl_override = NULL,
+    this_ylim = c(NA, NA)
   ) {
-  
-  full_df <- load_from_parts(csv_dirs, "data/success_over_groups_jitter.csv")
+
+  if (is.null(tbl_override)) {
+    full_df <- load_from_parts(csv_dirs, "data/success_over_groups.csv")
+  } else {
+    full_df <- tbl_override
+  }
+
+  # full_df <- load_from_parts(csv_dirs, "data/success_over_groups_jitter.csv")
   write_path <- file.path(write_dir, write_filename)
   
   # Need each outcome for every homophily value separated.
@@ -55,7 +63,7 @@ success_over_groups_jitter <- function(
     stat_summary(fun=mean, geom="line", color="#02bec3", size=1.5, aes(group=1)) +
     stat_summary(fun=mean, geom="point", shape=23, size=4, fill="#02bec3", stroke=1.1) +
     xlab("Start group") + ylab("Success rate") + 
-    # scale_color_discrete("Legend") +
+      ylim(this_ylim) +
     mytheme
   
   ggsave(write_path, width=6, height=3.75)
@@ -89,13 +97,19 @@ point_for_jitter_legend <- function(write_path = "figures/jitter_legend_point.pd
 
 steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
                                               write_dir = "figures/",
-                                              write_filename = 
-                                                "steps_over_groups_success_failure.pdf", 
-                                              minority_pop_sizes = c(0.05)) {
+                                              write_filename = "steps_over_groups_success_failure.pdf", 
+                                              minority_pop_sizes = c(0.05),
+                                              tbl_override = NULL,
+                                              this_ylim = c(0, 80)) {
   
-  full_df <- load_from_parts(csv_dirs, "data/steps_over_groups.csv")
+  if (is.null(tbl_override)) {
+    full_df <- load_from_parts(csv_dirs, "data/steps_over_groups.csv")
+  } else {
+    full_df <- tbl_override
+  }
   
   write_path <- file.path(write_dir, write_filename)
+  print(write_path)
   
   success_remap <- function(frac_a_curr_trait) {
     if (frac_a_curr_trait == 1.0)
@@ -123,6 +137,7 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
       geom_line(aes(color=Status), size=1.5) +
       geom_point(aes(fill=Status, shape=Status), color='black', size=5, stroke=1.1) +
       xlab("Start group") + ylab("Mean steps to\nsuccess/failure") + 
+      ylim(this_ylim) +
       # scale_color_discrete("Status") +
       scale_shape_manual(values = c(21,24), breaks=c("Success", "Failure")) +
       scale_color_discrete(limits=c("Success", "Failure"), type=color_values) +
@@ -133,7 +148,6 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
     
     return(p)
 }
-
 
 
 main_asymm_heatmaps <- function(csv_dir = "data/main_parts", 
@@ -222,12 +236,10 @@ load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
 }
 
 
-
-
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
+
   group_w_vals <- c("1", "2", "Both")
   
-  # group_w_vals <- c("1")
   for (group_w_innovation in group_w_vals) {
     
     files <- list.files(csv_dir, 
@@ -255,7 +267,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       this_write_dir <- file.path(write_dir, "nagents", this_nagents)
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
       
-      asymm_heatmap(this_tbl, group_w_innovation, write_path)
+      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
     }
     # minority group size sensitivity.
     for (this_group_1_frac in c(0.2, 0.35, 0.5)) {
@@ -264,7 +276,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       this_write_dir <- file.path(write_dir, "m", this_group_1_frac)
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
       
-      asymm_heatmap(this_tbl, group_w_innovation, write_path)
+      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
     }
     # f(a) sensitivity.
     for (this_a_fitness in c(1.05, 1.4, 2.0)) {
@@ -272,12 +284,13 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
       this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      if (this_a_fitness %in% c(1.4, 2.0)) {
-        asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      }
-      else {
-        asymm_heatmap(this_tbl, group_w_innovation, write_path)
-      }
+      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+      # if (this_a_fitness %in% c(1.4, 2.0)) {
+        # asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+      # }
+      # else {
+      #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+      # }
     }
   }
 
@@ -383,85 +396,67 @@ plot_group_freq_series <- function(csv_loc, write_dir = "figures/group_prevalenc
   save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
   
   ggsave(save_path, width = 7.5, height = 4.65)
+
 }
 
 
+supp_mean_plots <- function(csv_dir = "data/supp_parts", 
+                            write_dir = "figures/supp") {
 
-# success_over_groups_boxplot <- function(
-    #   csv_dirs = c("data/main_parts", "data/supp_parts"), 
-#   write_path = "figures/success_over_groups_boxplot.pdf", 
-#   minority_pop_sizes = c(0.05, 0.2, 0.5)) {
-# 
-#   full_df <- load_from_parts(csv_dirs, "data/success_over_groups_boxplot.csv")
-#   print(full_df)
-# 
-#   # Need each outcome for every homophily value separated.
-#   aggdf <- full_df %>%
-#     filter(group_1_frac %in% minority_pop_sizes) %>%
-#     group_by(homophily_1, homophily_2, group_w_innovation, group_1_frac) %>%
-#     summarize(success_rate = mean(frac_a_curr_trait))
-# 
-#   aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
-#   aggdf$group_1_frac <- factor(aggdf$group_1_frac)
-# 
-#   aggdf <- rename(aggdf, start_group = group_w_innovation, 
-#                          minority_group_size = group_1_frac,
-#                          h_min = homophily_1, h_maj = homophily_2)
-# 
-#   # Now create boxplot with start group on x-axis, success_rate on y-axis, 
-#   # and color-coded by minority group size.
-#   p <- ggplot(aggdf, aes(x = factor(start_group, 
-#                                     level=c("Majority", "Minority", "Both")), 
-#                          y = success_rate)) + 
-#          geom_boxplot(aes(color = minority_group_size)) +
-#          xlab("Start group") + ylab("Success rate") + 
-#          scale_color_discrete("Min. group size") +
-#          mytheme
-# 
-#   ggsave(write_path)
-# 
-#   return (p)
-# }
+  tbl <- load_from_parts(csv_dirs = c("data/supp_parts"), 
+                         sync_file = "data/supp_mean_steps.csv")
 
+  success_write_dir = file.path(write_dir, "success_jitter")
+  steps_write_dir = file.path(write_dir, "mean_steps")
 
-# steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"), 
-#                                               write_path = "figures/steps_over_groups_success_failure_boxplot.pdf", minority_pop_sizes = c(0.05)) {
-# 
-#   full_df <- load_from_parts(csv_dirs, "data/steps_over_groups_boxplot.csv")
-# 
-#   success_remap <- function(frac_a_curr_trait) {
-#     if (frac_a_curr_trait == 1.0)
-#       return ("Success")
-#     else
-#       return ("Failure")
-#   }
-# 
-#   full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
-#   
-#   aggdf <- full_df %>%
-#     filter(group_1_frac %in% minority_pop_sizes) %>%
-#     group_by(homophily_1, homophily_2, group_w_innovation, success) %>%
-#     summarize(step = mean(step))
-# 
-#   aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
-# 
-#   aggdf <- rename(aggdf, start_group = group_w_innovation, 
-#                          h_min = homophily_1, h_maj = homophily_2)
-# 
-#   p <- ggplot(aggdf, aes(x = factor(start_group, 
-#                                     level=c("Majority", "Minority", "Both")),
-#                          y = step)) +
-#          # geom_boxplot(aes(color = success)) + 
-#     # geom_violin(aes(color = success)) + 
-#     geom_jitter(alpha=0.5, width=0.2, aes(color=success)) +
-#     # stat_summary(fun=mean, geom="line", color="#02bec3", size=1.5, aes(group=1)) +
-#     # stat_summary(fun=mean, geom="point", shape=23, size=4, fill="#02bec3") +
-#          xlab("Start group") + ylab("Mean steps to success/failure") +
-#          scale_color_discrete("Status") + 
-#          guides(colour = guide_legend(override.aes = list(size=5))) +
-#          mytheme
-# 
-#   ggsave(write_path, width=7, height=5)
-# 
-#   return (p)
-# }
+  for (this_nagents in c(50, 100, 200)) {
+    this_tbl <- tbl[tbl$nagents == this_nagents, ]
+
+    success_over_groups_jitter(NULL, success_write_dir, 
+                               paste0("nagents=", this_nagents, ".pdf"),
+                               tbl_override = this_tbl, 
+                               this_ylim = c(0.0, 1.0)) 
+
+    steps_ylim = c(0, 60)
+
+    steps_over_groups_success_failure(NULL, steps_write_dir, 
+                                      paste0("nagents=", this_nagents, ".pdf"),
+                                      tbl_override = this_tbl,
+                                      this_ylim = steps_ylim) 
+  }
+
+  # Now do the same for minority fraction and...
+  for (this_group_1_frac in c(0.2, 0.35, 0.5)) {
+    this_tbl <- tbl[tbl$group_1_frac == this_group_1_frac, ]
+
+    success_over_groups_jitter(NULL, success_write_dir, 
+                               paste0("group_1_frac=", this_group_1_frac, ".pdf"),
+                               tbl_override = this_tbl,
+                               this_ylim = c(0.0, 1.0)) 
+
+    steps_ylim = c(0, 80)
+
+    steps_over_groups_success_failure(NULL, steps_write_dir, 
+                                      paste0("group_1_frac=", this_group_1_frac, ".pdf"),
+                                      minority_pop_sizes = c(this_group_1_frac),
+                                      tbl_override = this_tbl,
+                                      this_ylim = steps_ylim) 
+  }
+
+  # ...adaptation fitness, f(a).
+  for (this_a_fitness in c(1.05, 1.4, 2.0)) {
+    this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
+
+    success_over_groups_jitter(NULL, success_write_dir, 
+                               paste0("a_fitness=", this_a_fitness, ".pdf"),
+                               tbl_override = this_tbl, 
+                               this_ylim = c(0.0, 1.0)) 
+
+    steps_ylim = c(0, 200)
+
+    steps_over_groups_success_failure(NULL, steps_write_dir, 
+                                      paste0("a_fitness=", this_a_fitness, ".pdf"),
+                                      tbl_override = this_tbl,
+                                      this_ylim = steps_ylim)
+  }
+}

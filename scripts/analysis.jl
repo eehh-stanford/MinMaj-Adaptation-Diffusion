@@ -173,12 +173,6 @@ R"""
 end
 
 
-function reproduce_FK(sync_file="data/outline/FK_Figure1.jld2",
-                      figure_dir="plots/outline/")
-
-end
-
-
 function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     afit105 = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
     afit12 = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
