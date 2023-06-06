@@ -138,6 +138,6 @@ Random.seed!()
         @test fitness_adjustment(0; group_freq_midpoint = 0.25, b = 5) == 0.0
         @test fitness_adjustment(1; group_freq_midpoint = 0.25, b = 5) == 1.0
         @test fitness_adjustment(0.25; group_freq_midpoint = 0.25, b = 5) == 0.5
-    end
 
+    end
 end
