@@ -114,7 +114,7 @@ Random.seed!()
 # end
 
 
-@testset verbose = true "Calculation of perceived fitness as expected" begin
+@testset verbose = true "Calculation of perceived fitness calculations as expected" begin
 
 
     @testset "fitness adjustment calculated as expected" begin
@@ -138,6 +138,29 @@ Random.seed!()
         @test fitness_adjustment(0; group_freq_midpoint = 0.25, b = 5) == 0.0
         @test fitness_adjustment(1; group_freq_midpoint = 0.25, b = 5) == 1.0
         @test fitness_adjustment(0.25; group_freq_midpoint = 0.25, b = 5) == 0.5
+    end
 
+    @testset "frequency of each trait calculated as expected" begin
+
+        model = cba_model(nagents = 100; group_1_frac = 0.2)
+        agents = collect(allagents(model))
+        # Get minority group members, remove 
+        minority_group = filter(a -> (a.id != 1 && a.group == 1), agents)
+        majority_group = filter(a -> a.group == 2, agents)
+
+        # Only initialize 9 since min group member w/ id=1 already has `a`.
+        for agent in minority_group[1:9]
+            agent.curr_trait = a
+        end
+
+        for agent in majority_group[1:10]
+            agent.curr_trait = a
+        end
+
+        @test trait_frequency(a, Minority, model) == 0.5
+        @test trait_frequency(a, Majority, model) == 1.0/8.0
+        @test trait_frequency(A, Minority, model) == 0.5
+        @test trait_frequency(A, Majority, model) == 7.0/8.0
+            
     end
 end

@@ -5,6 +5,8 @@ using StatsBase
 
 @enum Trait a A
 
+@enum Group Minority Majority Both
+
 
 mutable struct CBA_Agent <: AbstractAgent
     
@@ -151,5 +153,19 @@ function fitness_adjustment(group_freq; group_freq_midpoint = 0.5, b = 1)
     den = num + (1-(group_freq^r))^b
 
     return num / den
+
+end
+
+
+function trait_frequency(trait::Trait, group::Group, model)
+
+    # XXX remove when transition is made from ints to enum for Groups.
+    group_int = group == Minority ? 1 : 2
+    agents = filter(a -> a.group == group_int, collect(allagents(model)))
+    total_agents = length(agents)
+
+    numagents_w_trait = length(filter(a -> a.curr_trait == trait, agents))
+
+    return numagents_w_trait / total_agents
 
 end
