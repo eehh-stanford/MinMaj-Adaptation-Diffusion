@@ -43,7 +43,7 @@ end
 function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
                                   homophily_1 = 1.0, homophily_2 = 1.0, 
-                                  rep_idx = nothing, model_parameters...)
+                                  rep_idx = nothing)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
     ngroups = 2
@@ -126,6 +126,7 @@ function select_teacher(focal_agent, model, group)
         filter(agent -> (agent.group == group) && (agent != focal_agent), 
                collect(allagents(model)))
 
+    # TODO here's where to edit teacher selection weighting
     teacher_weights = 
         map(agent -> model.trait_fitness_dict[agent.curr_trait], 
                               prospective_teachers)

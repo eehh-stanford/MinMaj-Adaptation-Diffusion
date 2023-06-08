@@ -126,7 +126,7 @@ Random.seed!()
 
         # Test use of group_freq_midpoint.
         @test fitness_adjustment(0; group_freq_midpoint = 0.25) == 0.0
-        @test fitness_adjustment(1; group_freq_midpoint = 0.25) == 1.0
+    @test fitness_adjustment(1; group_freq_midpoint = 0.25) == 1.0
         @test fitness_adjustment(0.25; group_freq_midpoint = 0.25) == 0.5
 
         # Test use of b parameter.
@@ -161,6 +161,45 @@ Random.seed!()
         @test trait_frequency(a, Majority, model) == 1.0/8.0
         @test trait_frequency(A, Minority, model) == 0.5
         @test trait_frequency(A, Majority, model) == 7.0/8.0
-            
+
+    end
+
+    @testset "teacher selection operates as expected" begin
+        
+        # Initialize model with small population for easy numbers.
+        nagents = 100
+        model_no_homophily = cba_model(nagents; 
+                                       group_1_frac = 0.2, homophily_1 = 0.0, 
+                                       homophily_2 = 0.0)
+
+        model_high_min_homophily = cba_model(nagents; 
+                                       group_1_frac = 0.2, homophily_1 = 0.8, 
+                                       homophily_2 = 0.2)
+
+        model_high_maj_homophily = cba_model(nagents; 
+                                       group_1_frac = 0.2, homophily_1 = 0.2, 
+                                       homophily_2 = 0.8)
+
+        models = [model_no_homophily, 
+                  model_high_min_homophily, 
+                  model_high_maj_homophily]
+
+        # Initialize traits in each population 
+        for model in models
+
+            agents = collect(allagents(model))
+            # Get minority group members, remove 
+            minority_group = filter(a -> (a.id != 1 && a.group == 1), agents)
+            majority_group = filter(a -> a.group == 2, agents)
+        end
+
+        # Only initialize 9 since min group member w/ id=1 already has `a`.
+        for agent in minority_group[1:9]
+            agent.curr_trait = a
+        end
+
+        for agent in majority_group[1:10]
+            agent.curr_trait = a
+        end
     end
 end
