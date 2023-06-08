@@ -142,7 +142,7 @@ Random.seed!()
 
     @testset "frequency of each trait calculated as expected" begin
 
-        model = cba_model(nagents = 100; group_1_frac = 0.2)
+        model = cba_model(100; group_1_frac = 0.2)
         agents = collect(allagents(model))
         # Get minority group members, remove 
         minority_group = filter(a -> (a.id != 1 && a.group == 1), agents)
