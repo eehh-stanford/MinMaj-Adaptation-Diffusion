@@ -43,6 +43,10 @@ end
 function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
                                   homophily_1 = 1.0, homophily_2 = 1.0, 
+                                  sigmoid_slope = 5.0, fitness_diff_coeff = 0.2,
+                                  f0_A = 0.9, f0_a = 1.1, 
+                                  nstar_min_min = 0.25, nstar_max_max = 0.25,
+                                  nstar_min_max = 0.5, nstar_max_min = 0.5,
                                   rep_idx = nothing)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
@@ -55,7 +59,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     end
 
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
+    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents sigmoid_slope fitness_diff_coeff f0_A f0_a nstar_min_min nstar_max_max nstar_min_max nstar_max_min
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(group_1_frac * nagents)
@@ -100,6 +104,9 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     end
     
     agents = collect(allagents(model))
+    
+    model.properties[:minority_group] = filter(a -> a.group == 1, agents)
+    model.properties[:majority_group] = filter(a -> a.group == 2, agents)
 
     return model
 end
@@ -119,17 +126,20 @@ function sample_group(focal_agent, model)
 end
 
 
-function select_teacher(focal_agent, model, group)
+function select_teacher(observing_agent, model, group)
 
     ## Begin payoff-biased social learning from teacher within selected group.
     prospective_teachers = 
-        filter(agent -> (agent.group == group) && (agent != focal_agent), 
+        filter(agent -> (agent.group == group) && (agent != observing_agent), 
                collect(allagents(model)))
 
     # TODO here's where to edit teacher selection weighting
-    teacher_weights = 
-        map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-                              prospective_teachers)
+    # teacher_weights = 
+    #     map(agent -> model.trait_fitness_dict[agent.curr_trait], 
+    #                           prospective_teachers)
+    teacher_weights = map(prospective_teacher -> 
+                          fitness(observing_agent, prospective_teacher, prospective_teachers, model),
+                          prospective_teachers)
 
     # Renormalize weights.
     denom = Float64(sum(teacher_weights))
@@ -140,32 +150,63 @@ function select_teacher(focal_agent, model, group)
 end
 
 
-function calculate_prospective_teacher_weights(focal_agent, model, group)
+# Fitness of focal_agent in G' as perceived by observing_agent in G given model parameters.
+function fitness(observing_agent, focal_agent, prospective_teachers, model)
+
+    base_fitness = focal_agent.curr_trait == a ? model.f0_a : model.f0_A
+
+    # Determine which nstar to use depending on group membership.
+    if (observing_agent.group == 1) && (focal_agent.group == 1)
+
+        nstar_G_Gprime = model.nstar_min_min
+
+    elseif (observing_agent.group == 1) && (focal_agent.group == 2)
+
+        nstar_G_Gprime = model.nstar_min_maj
+
+    elseif (observing_agent.group == 2) && (focal_agent.group == 1)
+
+        nstar_G_Gprime = model.nstar_maj_min
+
+    else
+
+        nstar_G_Gprime = model.nstar_maj_maj
+    end
+
+    # For the current frequency-dependent fitness adjustment, we use the
+    # focal agent's current trait and the focal agent's group since these are
+    # what matter to the observing_agent who is calculating weights for choosing
+    # a teacher.
+    this_adjustment = 
+        fitness_adjustment(
+            trait_frequency(focal_agent.curr_trait, prospective_teachers, model);
+            nstar_G_Gprime, sigmoid_slope = model.sigmoid_slope
+        )
     
-    # 
+    return base_fitness + this_adjustment
+
 end
 
 
-function fitness_adjustment(group_freq; group_freq_midpoint = 0.5, b = 1)
+function fitness_adjustment(group_freq; nstar_G_Gprime = 0.5, sigmoid_slope = 1)
 
-    r = -log10(2) / log10(group_freq_midpoint)
+    r = -log10(2) / log10(nstar_G_Gprime)
 
-    num = group_freq^(r*b)
-    den = num + (1-(group_freq^r))^b
+    num = group_freq^(r*sigmoid_slope)
+    den = num + (1 - (group_freq^r))^sigmoid_slope
 
     return num / den
 
 end
 
 
-function trait_frequency(trait::Trait, group::Group, model)
+function trait_frequency(trait::Trait, prospective_teachers, model)
 
-    # XXX remove when transition is made from ints to enum for Groups.
-    group_int = group == Minority ? 1 : 2
-    agents = filter(a -> a.group == group_int, collect(allagents(model)))
-    total_agents = length(agents)
+    # group_key = group == 1 ? :minority_group : :majority_group
+    # agents = model.properties[group_key]
+    total_agents = length(prospective_teachers)
 
-    numagents_w_trait = length(filter(a -> a.curr_trait == trait, agents))
+    numagents_w_trait = length(filter(a -> a.curr_trait == trait, prospective_teachers))
 
     return numagents_w_trait / total_agents
 
