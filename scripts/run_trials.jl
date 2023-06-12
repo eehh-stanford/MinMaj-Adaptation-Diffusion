@@ -19,6 +19,34 @@ include("../src/experiment.jl")
 
 s = ArgParseSettings()
 
+function vecparse(T, s::AbstractString)
+
+    if occursin(":", s)
+        vals = split(s, ":")
+        parseT(x) = parse(T, x)
+
+        return parseT(vals[1]):parseT(vals[2]):parseT(vals[3])
+        
+    else
+        s = replace(s, "[" => "")
+        s = replace(s, "]" => "")
+
+        return [parse(T, el) for el in split(s, ",")]
+    end
+end
+
+
+# Define functions to parse vectors of floats...
+function ArgParse.parse_item(::Type{Vector{Float64}}, s::AbstractString)
+    vecparse(Float64, s) 
+end
+
+
+# ...and vectors of ints. Could not get templated version to work so had to dup.
+function ArgParse.parse_item(::Type{Vector{Int64}}, s::AbstractString)
+    vecparse(Int64, s)
+end
+
 
 function parse_cli()
 
@@ -38,24 +66,59 @@ function parse_cli()
             arg_type = Float64
             default = 0.05
 
-        "--a_fitness", "-f"
-            help = "Fitness value of the adaptive trait; non-adaptive trait has fitness 1"
-            arg_type = Float64
-            default = 1.2
-
         "--group_w_innovation"
             help = "Group that should start with the innovation: 1, 2, or 'Both'"
-            required = true
+            # required = true
+            default = 1
 
         "--nagents", "-N"
             help = "Population size, N"
             default = 100
             arg_type = Int
+
+        "--f0_A"
+            help = "Base fitness of the non-adaptive trait"
+            default = 0.9
+            arg_type = Float64
+
+        "--f0_a"
+            help = "Base fitness of the adaptive trait"
+            default = 1.5
+            arg_type = Float64
+
+        "--sigmoid_slope"
+            help = "Sigmoid parameter controlling sharpness of slope from 0 to 1"
+            default = 5.0
+            arg_type = Float64
+
+        "--fitness_diff_coeff"
+            help = "Maximum frequency-dependent fitness improvement"
+            default = 0.2
+            arg_type = Float64
+
+        "--nstar_min_min"
+            help = "Frequency at which 50% of full frequency-dependent difference attained when minority group observes minority group"
+            default = [0.25, 0.5, 0.75]
+            arg_type = Vector{Float64}
+
+        "--nstar_min_maj"
+            help = "Frequency at which 50% of full frequency-dependent difference attained when minority group observes majority group"
+            default = [0.25, 0.5, 0.75]
+            arg_type = Vector{Float64}
+
+        "--nstar_maj_min"
+            help = "Frequency at which 50% of full frequency-dependent difference attained when majority group observes minority group"
+            default = [0.25, 0.5, 0.75]
+            arg_type = Vector{Float64}
+
+        "--nstar_maj_maj"
+            help = "Frequency at which 50% of full frequency-dependent difference attained when majority group observes majority group"
+            default = [0.25, 0.5, 0.75]
+            arg_type = Vector{Float64}
     end
 
     return parse_args(s)
 end
-
 
 
 function run_trials(nreplicates = 20; 
@@ -92,7 +155,14 @@ function main()
     datadirname = pop!(parsed_args, "datadirname")
     nameargs = copy(parsed_args)
 
-    outputfilename = joinpath("data", datadirname, savename(nameargs, "csv"))
+    outputfilename = 
+        replace(
+            joinpath("data", datadirname, savename(nameargs, "csv")),
+            "fitness_diff_coeff" => "fdiff_co"
+        )
+    outputfilename = replace(outputfilename, "sigmoid_slope" => "sigslpe")
+    outputfilename = replace(outputfilename, "nstar" => "n")
+    
 
     nreplicates = pop!(parsed_args, "nreplicates")
 

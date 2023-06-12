@@ -29,7 +29,7 @@ success_over_groups_jitter <- function(
     write_dir = "figures",
     write_filename = "success_over_groups_jitter.pdf",
     tbl_override = NULL,
-    this_ylim = c(NA, NA)
+    this_ylim = c(0.0, 1.0)
   ) {
 
   if (is.null(tbl_override)) {

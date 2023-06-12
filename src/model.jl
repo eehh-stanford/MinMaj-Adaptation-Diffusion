@@ -41,16 +41,15 @@ end
 
 
 function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
-                                  A_fitness = 1.0, a_fitness = 10.0, 
+                                  # A_fitness = 1.0, a_fitness = 10.0, 
                                   homophily_1 = 1.0, homophily_2 = 1.0, 
                                   sigmoid_slope = 5.0, fitness_diff_coeff = 0.2,
                                   f0_A = 0.9, f0_a = 1.1, 
-                                  nstar_min_min = 0.25, nstar_max_max = 0.25,
-                                  nstar_min_max = 0.5, nstar_max_min = 0.5,
+                                  nstar_min_min = 0.25, nstar_maj_maj = 0.25,
+                                  nstar_min_maj = 0.5, nstar_maj_min = 0.5,
                                   rep_idx = nothing)
 
-    trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
-    ngroups = 2
+    # trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
 
     if typeof(group_w_innovation) == String
         if group_w_innovation != "Both"
@@ -59,7 +58,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     end
 
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents sigmoid_slope fitness_diff_coeff f0_A f0_a nstar_min_min nstar_max_max nstar_min_max nstar_max_min
+    properties = @dict homophily_1 homophily_2 group_1_frac rep_idx nagents sigmoid_slope fitness_diff_coeff f0_A f0_a nstar_min_min nstar_maj_maj nstar_min_maj nstar_maj_min
 
     model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(group_1_frac * nagents)
@@ -105,9 +104,6 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
     
     agents = collect(allagents(model))
     
-    model.properties[:minority_group] = filter(a -> a.group == 1, agents)
-    model.properties[:majority_group] = filter(a -> a.group == 2, agents)
-
     return model
 end
 
