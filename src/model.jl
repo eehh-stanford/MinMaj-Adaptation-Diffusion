@@ -6,7 +6,7 @@ using StatsBase
 @enum Trait a A
 
 
-mutable struct CBA_Agent <: AbstractAgent
+mutable struct Person <: AbstractAgent
     
     id::Int
     curr_trait::Trait
@@ -27,7 +27,7 @@ function model_step!(model)
 end
 
 
-function agent_step!(focal_agent::CBA_Agent, model::ABM)
+function agent_step!(focal_agent::Person, model::ABM)
 
     # Agent samples randomly from one of the groups, weighted by homophily.
     group = sample_group(focal_agent, model)
@@ -38,7 +38,7 @@ function agent_step!(focal_agent::CBA_Agent, model::ABM)
 end
 
 
-function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
+function adaptation_diffusion_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
                                   homophily_1 = 1.0, homophily_2 = 1.0, 
                                   rep_idx = nothing, model_parameters...)
@@ -55,7 +55,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
 
     properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
 
-    model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
+    model = ABM(Person, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(group_1_frac * nagents)
     group1_cutoff = Int(flcutoff)
     
@@ -92,7 +92,7 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
             end 
         end
         
-        agent_to_add = CBA_Agent(aidx, trait, trait, group, homophily)
+        agent_to_add = Person(aidx, trait, trait, group, homophily)
 
         add_agent!(agent_to_add, model)
     end

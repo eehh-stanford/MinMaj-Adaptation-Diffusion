@@ -9,7 +9,7 @@ Random.seed!()
 
 @testset "Groups are initialized as expected" begin
 
-    m = cba_model(4; group_1_frac = 0.5, homophily = 0.0, a_fitness = 2.0)
+    m = adaptation_diffusion_model(4; group_1_frac = 0.5, homophily = 0.0, a_fitness = 2.0)
 
     agents = collect(allagents(m))
     @test length(agents) == 4
@@ -30,7 +30,7 @@ Random.seed!()
     @test m[3].curr_trait == A
     @test m[4].curr_trait == A
 
-    m = cba_model(4; group_1_frac = 0.25, group_w_innovation = 2, 
+    m = adaptation_diffusion_model(4; group_1_frac = 0.25, group_w_innovation = 2, 
                   homophily = 0.0, a_fitness = 2.0)
 
     @test m[1].group == 1
@@ -50,7 +50,7 @@ end
     ntrials = 10000
 
     @testset "Teacher-group and teacher selection works for extreme homophily values" begin
-        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 1.0, homophily_2 = 1.0,
+        m = adaptation_diffusion_model(4; group_1_frac = 0.25, homophily_1 = 1.0, homophily_2 = 1.0,
                       a_fitness = 2.0)
         
         @test sample_group(m[1], m) == 1
@@ -58,8 +58,8 @@ end
         @test sample_group(m[3], m) == 2
         @test sample_group(m[4], m) == 2
 
-        # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
-        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
+        # m = adaptation_diffusion_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
+        m = adaptation_diffusion_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
                          a_fitness = 1e9)
         
         for aidx in 1:4
@@ -74,7 +74,7 @@ end
 
     # Confirm groups are initialized as expected and that teacher selection 
     # works as expected for asymmetric, non-zero homophily. 
-    m = cba_model(4; group_1_frac = 0.5, homophily_1 = 0.75, 
+    m = adaptation_diffusion_model(4; group_1_frac = 0.5, homophily_1 = 0.75, 
                      homophily_2 = 0.25, a_fitness = 1e2)
 
     agents = collect(allagents(m))
