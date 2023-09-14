@@ -22,7 +22,7 @@ end
 @everywhere include("model.jl")
 
 
-function homophily_minority_experiment(nagents=100; a_fitness = 2.0, 
+function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0, 
                                        homophily = [
                                         collect(0.0:0.05:0.95)..., 0.99
                                        ],
