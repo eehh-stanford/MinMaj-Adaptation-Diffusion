@@ -1,0 +1,12 @@
+﻿Variable,Values,Description,Notes
+step,"0,1,2,…",Model time step,
+frac_a_curr_trait,"[0, 1]",Global fraction of agents adopting adaptive behavior,
+frac_a_ifdata_frac_a=frac_a_curr_trait_is_minority,"[0, 1]",Fraction of minority agents adopting adaptive behavior,
+frac_a_ifdata_frac_a=frac_a_curr_trait_#84_f=is_minority,"[0, 1]",Fraction of majority agents adopting adaptive behavior,
+ensemble,"1,2,3,…",Model run trial index,Index of model run trial across all parameter combinations and rep_index values
+a_fitness,"1.05,1.2,1.4,2.0",Adaptive behavior fitness,The non-adaptive behavior fitness is always 1.0
+group_1_frac,"0.05, 0.2, 0.35, 0.5",Fraction of the population in the minority group,
+nagents,"50, 100, 200, 1000",Number of agents in simulated population,
+rep_idx,"1,2,3,…",Repeat index of parameter setting,Model ensemble index of model run trials with otherwise identical paraemter settings
+homophily_1,"{0.0, 0.05, 0.1, ..., 0.95, 0.99} ",Minority group homophily,
+homophily_2,"{0.0, 0.05, 0.1, ..., 0.95, 0.99} ",Majority group homophily,
