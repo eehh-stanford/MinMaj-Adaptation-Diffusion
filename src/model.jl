@@ -38,9 +38,9 @@ function agent_step!(focal_agent::Person, model::ABM)
 end
 
 
-function adaptation_diffusion_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
+function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, group_w_innovation = 1,
                                   A_fitness = 1.0, a_fitness = 10.0, 
-                                  homophily_1 = 1.0, homophily_2 = 1.0, 
+                                  min_homophily = 1.0, maj_homophily = 1.0, 
                                   rep_idx = nothing, model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
@@ -53,20 +53,20 @@ function adaptation_diffusion_model(nagents = 100; group_1_frac = 1.0, group_w_i
     end
 
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
+    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents 
 
     model = ABM(Person, scheduler = Schedulers.fastest; properties)
-    flcutoff = ceil(group_1_frac * nagents)
-    group1_cutoff = Int(flcutoff)
+    flcutoff = ceil(min_group_frac * nagents)
+    min_group_cutoff = Int(flcutoff)
     
     for aidx in 1:nagents
 
         # For now we assume two groups and one or two agents have de novo innovation.
-        if aidx ≤ group1_cutoff 
+        if aidx ≤ min_group_cutoff 
 
             # Set group membership and homophily.
             group = 1 
-            homophily = homophily_1
+            homophily = min_homophily
 
             # Determine whether the agent should start with innovation or not.
             if (((group_w_innovation == 1) || (group_w_innovation == "Both")) 
@@ -80,11 +80,11 @@ function adaptation_diffusion_model(nagents = 100; group_1_frac = 1.0, group_w_i
 
             # Set group membership and homophily.
             group = 2
-            homophily = homophily_2
+            homophily = maj_homophily
 
             # Determine whether the agent should start with innovation or not.
             if (((group_w_innovation == 2) || (group_w_innovation == "Both")) 
-                && (aidx == group1_cutoff + 1)) 
+                && (aidx == min_group_cutoff + 1)) 
 
                 trait = a
             else

@@ -33,7 +33,7 @@ function parse_cli()
             arg_type = Int
             default = 100
 
-        "--group_1_frac", "-m"
+        "--min_group_frac", "-m"
             help = "Fraction of population that is in minority"
             arg_type = Float64
             default = 0.05
