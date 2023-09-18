@@ -23,7 +23,7 @@ PROJECT_THEME = Theme(
 
 
 function minority_majority_comparison(nagents=100; 
-                                      group_1_frac = 0.05, a_fitness = 1.2, 
+                                      min_group_frac = 0.05, a_fitness = 1.2, 
                                       diagnostic_dir = "plots/minmaj_compare",
                                       sync_dir = "data/minmaj_compare",
                                       nreplicates = 1000)
@@ -44,7 +44,7 @@ function minority_majority_comparison(nagents=100;
     for group in groups
         result =  
             sustainability_vs_homophily(nagents; group_w_innovation = group,
-                                        a_fitness, group_1_frac, nreplicates,
+                                        a_fitness, min_group_frac, nreplicates,
                                         sync_dir, figure_dir = diagnostic_dir)
         if group == 1
             group_label = "Minority"
@@ -61,7 +61,7 @@ function minority_majority_comparison(nagents=100;
 
     figpath = joinpath(
         diagnostic_dir, 
-        "nagents=$nagents-group_1_frac=$group_1_frac-a_fitness=$a_fitness.pdf"
+        "nagents=$nagents-min_group_frac=$min_group_frac-a_fitness=$a_fitness.pdf"
     )
 
     p = plot(results, x=:homophily, y=:sustainability, 
@@ -173,11 +173,11 @@ R"""
 end
 
 
-function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
-    afit105 = load("data/outline/a_fitness=1.05__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit12 = load("data/outline/a_fitness=1.2__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit14 = load("data/outline/a_fitness=1.4__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit20 = load("data/outline/a_fitness=2.0__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+function sustainability_comparison(min_group_frac = 0.05, group_w_innovation = 1)
+    afit105 = load("data/outline/a_fitness=1.05__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit12 = load("data/outline/a_fitness=1.2__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit14 = load("data/outline/a_fitness=1.4__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+    afit20 = load("data/outline/a_fitness=2.0__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
 
     yticks = 0.0:0.2:1.0
     p = plot(
@@ -204,7 +204,7 @@ function sustainability_comparison(group_1_frac = 0.05, group_w_innovation = 1)
     )
 
     draw(
-         PDF("plots/outline/comparison_minsize=$(group_1_frac)_group_w_innovation=$(group_w_innovation).pdf",
+         PDF("plots/outline/comparison_minsize=$(min_group_frac)_group_w_innovation=$(group_w_innovation).pdf",
              5.25inch, 3.5inch), 
         p
     )
@@ -212,12 +212,12 @@ end
 
 
 function sustainability_vs_homophily(nagents = 100;
-        a_fitness=1.4, group_1_frac = 0.05, nreplicates = 1000, 
+        a_fitness=1.4, min_group_frac = 0.05, nreplicates = 1000, 
         sync_dir = "data/outline", group_w_innovation = 1, 
         figure_dir = "plots/outline")
 
     # Build base file name.
-    fbase = "a_fitness=$(a_fitness)__group_1_frac=$(group_1_frac)__group_w_innovation=$(group_w_innovation)"
+    fbase = "a_fitness=$(a_fitness)__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation)"
     # Set path to which aggregated data will be synced.
     aggpath = joinpath(sync_dir, fbase * ".jld2")
 
@@ -225,12 +225,12 @@ function sustainability_vs_homophily(nagents = 100;
         agg = load(aggpath)["agg"]
     else
         res = homophily_minority_experiment(nagents; 
-                                            nreplicates, group_1_frac, 
+                                            nreplicates, min_group_frac, 
                                             a_fitness, group_w_innovation)
 
         # Group by homophily, calculate the mean sustainability and 
         # time to convergence across replicates for each homophily value.
-        agg = combine(groupby(res, [:homophily_1, :homophily_2]), 
+        agg = combine(groupby(res, [:min_homophily, :maj_homophily]), 
                       :frac_a_curr_trait => mean => :sustainability,
                       :step => mean => :step
                       )
@@ -238,12 +238,12 @@ function sustainability_vs_homophily(nagents = 100;
         @save aggpath agg
     end
 
-    agg_select = filter([:homophily_1, :homophily_2] => (h1, h2) -> h1 == h2, agg)
+    agg_select = filter([:min_homophily, :maj_homophily] => (h1, h2) -> h1 == h2, agg)
     # xdata = agg.homophily
     # ydata = agg.sustainability
 
     # p = plot(layer(agg, x=:homophily, y=:sustainability, Geom.line, Geom.point))
-    p = plot(layer(agg_select, x=:homophily_1, y=:sustainability, Geom.line, Geom.point))
+    p = plot(layer(agg_select, x=:min_homophily, y=:sustainability, Geom.line, Geom.point))
 
     figpath = joinpath(figure_dir, fbase * ".pdf")
 
@@ -282,7 +282,7 @@ end
 Run simulations to understand time series of adaptation prevalence by group.
 """
 function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10, 
-        group_1_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, 
+        min_group_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, 
         homophily_pairs = [(0.1, 0.1), (0.75, 0.75), (0.99, 0.99)],
             # [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
             #  (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
@@ -295,11 +295,11 @@ function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10,
     source("scripts/plot.R")
     """
     
-    for (homophily_1, homophily_2) in homophily_pairs
+    for (min_homophily, maj_homophily) in homophily_pairs
 
-        println(savename(@dict homophily_1 homophily_2))
+        println(savename(@dict min_homophily maj_homophily))
 
-        model_kwargs = @dict homophily_1 homophily_2 group_1_frac group_w_innovation a_fitness
+        model_kwargs = @dict min_homophily maj_homophily min_group_frac group_w_innovation a_fitness
 
         adf, mdf = compare_group_prevalence(nagents; ntrials, model_kwargs...)
 
@@ -333,7 +333,7 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
+    mdata = [:a_fitness, :min_group_frac, :rep_idx, :min_homophily, :maj_homophily]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)
@@ -368,7 +368,7 @@ function make_full_asymm_data(partition_dir = "data/main_parts", output_dir = "d
     
     # Main results (default) parameters
     nagents = 1000
-    group_1_frac = 0.05
+    min_group_frac = 0.05
     a_fitness = 1.2
     
     # For supplement find rows that are not the default values for each 
@@ -385,7 +385,7 @@ function make_full_asymm_data(partition_dir = "data/main_parts", output_dir = "d
         end
 
         # minority size sensitivity
-        for group_1_frac in [0.2, 0.35, 0.5]
+        for min_group_frac in [0.2, 0.35, 0.5]
             
         end
     else
