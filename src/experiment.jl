@@ -22,7 +22,7 @@ end
 @everywhere include("model.jl")
 
 
-function homophily_minority_experiment(nagents=100; a_fitness = 2.0, 
+function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0, 
                                        homophily = [
                                         collect(0.0:0.05:0.95)..., 0.99
                                        ],
@@ -40,7 +40,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
         @dict homophily_1 homophily_2 group_1_frac a_fitness rep_idx
     )
 
-    models = [cba_model(nagents; group_w_innovation, params...) 
+    models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
               for params in params_list]
 
     # adata = [(:curr_trait, fixated)]

@@ -72,7 +72,7 @@ function run_trials(nreplicates = 20;
     nagents = pop!(kwargs_dict, :nagents)
     kwargs_dict[:nreplicates] = nreplicates
 
-    result_df = homophily_minority_experiment(nagents; kwargs_dict...)
+    result_df = adaptation_diffusion_experiment(nagents; kwargs_dict...)
 
     CSV.write(outputfilename, result_df)
 

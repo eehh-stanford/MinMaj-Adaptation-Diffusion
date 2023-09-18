@@ -344,11 +344,11 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
         )
     end
 
-    # model = cba_model(nagents; model_kwargs...)
-    models = [cba_model(nagents; model_kwargs...) for _ in 1:ntrials]
+    models = [adaptation_diffusion_model(nagents; model_kwargs...) 
+              for _ in 1:ntrials]
 
-    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated; adata, mdata)
-    println(adf)
+    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated; 
+                            adata, mdata)
 
     rename!(adf, [:step, :frac_a, :frac_a_min, :frac_a_max, :ensemble])
     
