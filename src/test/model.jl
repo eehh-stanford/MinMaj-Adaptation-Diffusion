@@ -49,7 +49,7 @@ end
 
     ntrials = 10000
 
-    @testset "Teacher-group and teacher selection works for extreme homophily values" begin
+    @testset "Teacher-group and teacher selection works for extreme homophily values (non-networked)" begin
         m = adaptation_diffusion_model(4; min_group_frac = 0.25, min_homophily = 1.0, maj_homophily = 1.0,
                       a_fitness = 2.0)
         
@@ -90,7 +90,59 @@ end
         @test n_group2 == 2
     end
 
-    @testset "Asymmetric homophily produces correct teacher selection stats (Agent $ii)" for ii in 1:4
+    @testset "Social networks properly initialized according to global mean degree and homophily settings" begin
+
+        expected_K_min = 15; expected_K_maj = 30; 
+        expected_K = expected_K_min + expected_K_maj
+        
+        N = 15; min_group_frac = 1./3.; h_min = 1./3.; h_maj = 2./3.;
+
+        expected_min_maj_edge_count = expected_maj_min_edge_count = 5
+
+        m = adaptation_diffusion_model(N; min_group_frac = min_group_frac, 
+                                       min_homophily = h_min, 
+                                       maj_homophily = h_maj, 
+                                       network = true,
+                                       mean_degree = 3
+                                      )
+        
+        # Still using group 1 to indicate Minority group, 2 for Majority.
+        minority_agents = filter(agent -> agent.group == 1, allagents(model))
+        n_teachers_minority = sum([agent -> length(agent.teachers) for agent in
+                                   filter(agent -> agent.group == 1, 
+                                          allagents(model))
+                                  ])
+
+        majority_agents = filter(agent -> agent.group == 2, allagents(model))
+        n_teachers_majority = sum([agent -> length(agent.teachers) for agent in
+                                   majority_agents
+                                  ])
+        
+        @test n_teachers_minority == expected_K_min
+        @test n_teachers_majority == expected_K_maj
+
+        minoritys_teachers = 
+            collect(Iterators.flatten([agent.teachers for agent in minority_agents]))
+        majoritys_teachers = 
+            collect(Iterators.flatten([agent.teachers for agent in majority_agents]))
+
+        # There should be 5 majority-group teachers for the minority group...
+
+        # and 5 minority-group teachers for the majority group.
+    end
+    # @testset "Teacher-group and teacher selection works for extreme homophily values (networked)" begin
+    
+    #     m = adaptation_diffusion_model(4; min_group_frac = 0.5, 
+    #                                    min_homophily = 0.75, 
+    #                                    maj_homophily = 0.25, 
+    #                                    a_fitness = 1e2,
+    #                                    network = true
+    #                                   )
+    #     # @test false
+
+    # end
+
+    @testset "Asymmetric homophily produces correct teacher selection stats, non-networked (Agent $ii)" for ii in 1:4
 
         teachers_selected = [
             select_teacher(m[ii], m, sample_group(m[ii], m))
@@ -109,6 +161,10 @@ end
             @test length(filter(a -> a.group == 2, teachers_selected)) ≈ (0.625 * ntrials) rtol=0.1
         end
 
+    end
+    
+    @testset "Asymmetric homophily produces correct teacher selection stats, non-networked (Agent $ii)" for ii in 1:4
+        # @test false
     end
 
 end

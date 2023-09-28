@@ -13,6 +13,7 @@ mutable struct Person <: AbstractAgent
     next_trait::Trait
     group::Int
     homophily::Float64
+    teachers::Union{Nothing,Vector{Int}}  # In non-network case no pre-set teachers.
 
 end
 
@@ -30,18 +31,26 @@ end
 function agent_step!(focal_agent::Person, model::ABM)
 
     # Agent samples randomly from one of the groups, weighted by homophily.
-    group = sample_group(focal_agent, model)
-    teacher = select_teacher(focal_agent, model, group)
+    if model.networked
+        # continue
+        # group = sample_group_networked(focal_agent, model)
+        # teacher = select_teacher_networked(focal_agent, model, group)
+    else
+        group = sample_group(focal_agent, model)
+        teacher = select_teacher(focal_agent, model, group)
+    end
 
     # Learn from teacher.
     focal_agent.next_trait = deepcopy(teacher.curr_trait) 
 end
 
 
-function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, group_w_innovation = 1,
-                                  A_fitness = 1.0, a_fitness = 10.0, 
-                                  min_homophily = 1.0, maj_homophily = 1.0, 
-                                  rep_idx = nothing, model_parameters...)
+function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, 
+                                    group_w_innovation = 1, 
+                                    A_fitness = 1.0, a_fitness = 10.0, 
+                                    min_homophily = 1.0, maj_homophily = 1.0, 
+                                    rep_idx = nothing, network = false, 
+                                    model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
     ngroups = 2
@@ -54,6 +63,9 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, group_w
 
 
     properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents 
+    if network
+        merge!(properties, model_parameters)
+    end
 
     model = ABM(Person, scheduler = Schedulers.fastest; properties)
     flcutoff = ceil(min_group_frac * nagents)
@@ -92,12 +104,14 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, group_w
             end 
         end
         
-        agent_to_add = Person(aidx, trait, trait, group, homophily)
+        agent_to_add = Person(aidx, trait, trait, group, homophily, nothing)
 
         add_agent!(agent_to_add, model)
     end
     
-    agents = collect(allagents(model))
+    if network
+        init_network!(model)
+    end
 
     return model
 end
@@ -114,6 +128,13 @@ function sample_group(focal_agent, model)
     weights[1:end .!= focal_agent.group] .= 1 - agent_group_weight
     
     return sample(Weights(weights)) 
+end
+
+
+function init_network!(model)
+    @assert :mean_degree ∈ keys(model.properties) "Mean degree must be provided for social-networked model"
+
+    
 end
 
 
