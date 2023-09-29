@@ -1,6 +1,6 @@
 using Agents
 using DrWatson: @dict
-using Graphs: SimpleDiGraph
+using Graphs: SimpleDiGraph, add_edge!, has_edge
 using StatsBase
 
 
@@ -139,16 +139,16 @@ function init_network!(model)
 
     # Access network; get minority and majority groups and ids.
     network = model.network
-
-    minority_group = filter(a -> a.group == 1, allagents(model))
+    agents = collect(allagents(model))
+    minority_group = filter(a -> a.group == 1, agents)
     minority_ids = map(a -> a.id, minority_group)
 
-    majority_group = filter(a -> a.group == 2, allagents(model))
+    majority_group = filter(a -> a.group == 2, agents)
     majority_ids = map(a -> a.id, majority_group)
 
     # Calculate number of edges of different types to add to the network.
     E = model.nagents * model.mean_degree
-    E_min = model.nagents * model.min_group_cutoff * model.mean_degree
+    E_min = model.nagents * model.min_group_frac * model.mean_degree
     E_maj = E - E_min
 
     E_min_ingroup = round(Int, E_min * ((1 + model.min_homophily) / 2.0))
@@ -160,9 +160,9 @@ function init_network!(model)
     # Add a random 'learns-from' tie for each agent in minority group to another
     # in-group member to ensure fully-connected populations.
     for min_id in minority_ids
-        possible_teacher_ids = filter!(a -> a.id ≠ min_id, minority_ids)
+        possible_teacher_ids = filter(id -> id ≠ min_id, minority_ids)
         selected_teacher = sample(possible_teacher_ids)
-        add_edge!(network, min_id, selected_teacher)
+        @assert add_edge!(network, min_id, selected_teacher)
     end
     # Add the remaining in-minority-group ties.
     remaining_min_ingroup = E_min_ingroup - length(minority_ids)
@@ -172,20 +172,22 @@ function init_network!(model)
         new_edge = (sample(minority_ids), sample(minority_ids)) 
 
         # If edge already exists, re-sample until new edge is generated.
-        while has_edge(network, new_edge)
+        resample = true
+        while resample
             new_edge = (sample(minority_ids), sample(minority_ids)) 
+            resample = has_edge(network, new_edge) || new_edge[1] == new_edge[2]
         end
         
         # Add new edge to the network.
-        add_edge!(network, new_edge)
+        @assert add_edge!(network, new_edge)
     end
 
     # Add a random 'learns-from' tie for each agent in majority group to another
     # in-group member to ensure fully-connected populations.
     for maj_id in majority_ids
-        possible_teacher_ids = filter!(a -> a.id ≠ maj_id, majority_ids)
+        possible_teacher_ids = filter(idx -> idx ≠ maj_id, majority_ids)
         selected_teacher = sample(possible_teacher_ids)
-        add_edge(network, maj_id, selected_teacher)
+        add_edge!(network, maj_id, selected_teacher)
     end
     # Add the remaining in-majority-group ties.
     remaining_maj_ingroup = E_maj_ingroup - length(majority_ids)
@@ -195,8 +197,10 @@ function init_network!(model)
         new_edge = (sample(majority_ids), sample(majority_ids)) 
 
         # If edge already exists, re-sample until new edge is generated.
-        while has_edge(network, new_edge)
+        resample = true
+        while resample
             new_edge = (sample(majority_ids), sample(majority_ids)) 
+            resample = has_edge(network, new_edge) || new_edge[1] == new_edge[2]
         end
         
         # Add new edge to the network.
@@ -206,6 +210,8 @@ function init_network!(model)
     ## Now add out-group edges.
     # Add minority-learns-from-majority edges.
     resample = true
+    learner::Int  = 0
+    teacher::Int  = 0
     for _ in 1:E_min_outgroup
         while resample
             # Select random learner from minority group...
@@ -213,25 +219,34 @@ function init_network!(model)
             # ...and a teacher from the majority group...
             teacher = sample(majority_ids)
 
-            resample = !has_edge(network, learner, teacher)
+            resample = has_edge(network, learner, teacher) || learner == teacher
         end
         # Add the edge to the network if it doesn't exist yet.
-        add_edge!(network, learner, teacher) 
+        @assert add_edge!(network, learner, teacher) "Learner: $learner, Teacher: $teacher"
+        resample = true
     end
-    # Add majority-learns-from-minority edges.
-    for _ in 1:E_maj_outgroup
-        # Select random learner from majority group...
-        learner = sample(majority_ids)
-        # ...and a teacher from the minority group.
-        teacher = sample(minority_ids)
 
-        resample = !has_edge(network, learner, teacher)
+    # Add majority-learns-from-minority edges.
+    resample = true
+    for _ in 1:E_maj_outgroup
+        while resample
+            # Select random learner from majority group...
+            learner = sample(majority_ids)
+            # ...and a teacher from the minority group.
+            teacher = sample(minority_ids)
+
+            resample = has_edge(network, learner, teacher) || learner == teacher
+        end
+        # Add the edge to the network if it doesn't exist yet.
+        @assert add_edge!(network, learner, teacher) "Learner: $learner, Teacher: $teacher"
+        resample = true
     end
 
     # Update agents with their teachers to simplify teacher lookups.
     edges = network.fadjlist
-    for (idx, agent) in enumerate(agents(model))
-        agent.teachers = edges[idx]
+    # for (idx, agent) in enumerate(allagents(model))
+    for agent in allagents(model)
+        agent.teachers = edges[agent.id]
     end
 end
 

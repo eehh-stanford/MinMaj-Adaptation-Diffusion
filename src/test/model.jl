@@ -99,37 +99,51 @@ end
 
         expected_min_maj_edge_count = expected_maj_min_edge_count = 5
 
-        m = adaptation_diffusion_model(N; min_group_frac = min_group_frac, 
-                                       min_homophily = h_min, 
-                                       maj_homophily = h_maj, 
-                                       network = true,
-                                       mean_degree = 3
-                                      )
-        
+        model = adaptation_diffusion_model(N; min_group_frac = min_group_frac, 
+                                           min_homophily = h_min, 
+                                           maj_homophily = h_maj, 
+                                           use_network = true,
+                                           mean_degree = 3
+                                          )
+
+        agents = collect(allagents(model))
+
         # Still using group 1 to indicate Minority group, 2 for Majority.
-        minority_agents = filter(agent -> agent.group == 1, allagents(model))
+        minority_agents = filter(agent -> agent.group == 1, agents)
         minoritys_teachers = 
             collect(Iterators.flatten([agent.teachers 
-                                       for agent in minority_agents]))
+                                       for agent in collect(minority_agents)]))
 
         n_minoritys_teachers = length(minoritys_teachers)
         @test n_minoritys_teachers == expected_E_min
 
-        majority_agents = filter(agent -> agent.group == 2, allagents(model))
+        majority_agents = filter(agent -> agent.group == 2, agents)
         majoritys_teachers = 
             collect(Iterators.flatten([agent.teachers 
-                                       for agent in majority_agents]))
+                                       for agent in collect(majority_agents)]))
 
         n_majoritys_teachers = length(majoritys_teachers)
         @test n_majoritys_teachers == expected_E_maj
         
         # There should be 5 majority-group teachers for the minority group...
         n_cross_group_teachers = 5
-        @test n_cross_group_teachers == length(filter(a -> a.group == 2, 
-                                                      minoritys_teachers))
+
+        @test n_cross_group_teachers == 
+            length(filter(teacher -> teacher > 5, 
+                          collect(Iterators.flatten(map(a -> a.teachers, 
+                              filter(a -> a.group == 1, agents)
+                             )))
+                         )
+                  )
+                                               
         # and 5 minority-group teachers for the majority group.
-        @test n_cross_group_teachers == length(filter(a -> a.group == 1, 
-                                                      majoritys_teachers))
+        @test n_cross_group_teachers == 
+            length(filter(teacher -> teacher < 6, 
+                          collect(Iterators.flatten(map(a -> a.teachers, 
+                              filter(a -> a.group == 2, agents)
+                             )))
+                         )
+                  )
     end
     # @testset "Teacher-group and teacher selection works for extreme homophily values (networked)" begin
     
