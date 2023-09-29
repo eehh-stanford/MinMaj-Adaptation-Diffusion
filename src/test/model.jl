@@ -92,10 +92,10 @@ end
 
     @testset "Social networks properly initialized according to global mean degree and homophily settings" begin
 
-        expected_K_min = 15; expected_K_maj = 30; 
-        expected_K = expected_K_min + expected_K_maj
+        expected_E_min = 15; expected_E_maj = 30; 
+        expected_E = expected_E_min + expected_E_maj
         
-        N = 15; min_group_frac = 1./3.; h_min = 1./3.; h_maj = 2./3.;
+        N = 15; min_group_frac = 1.0/3.0; h_min = 1.0/3.0; h_maj = 2.0/3.0;
 
         expected_min_maj_edge_count = expected_maj_min_edge_count = 5
 
@@ -108,27 +108,28 @@ end
         
         # Still using group 1 to indicate Minority group, 2 for Majority.
         minority_agents = filter(agent -> agent.group == 1, allagents(model))
-        n_teachers_minority = sum([agent -> length(agent.teachers) for agent in
-                                   filter(agent -> agent.group == 1, 
-                                          allagents(model))
-                                  ])
+        minoritys_teachers = 
+            collect(Iterators.flatten([agent.teachers 
+                                       for agent in minority_agents]))
+
+        n_minoritys_teachers = length(minoritys_teachers)
+        @test n_minoritys_teachers == expected_E_min
 
         majority_agents = filter(agent -> agent.group == 2, allagents(model))
-        n_teachers_majority = sum([agent -> length(agent.teachers) for agent in
-                                   majority_agents
-                                  ])
-        
-        @test n_teachers_minority == expected_K_min
-        @test n_teachers_majority == expected_K_maj
-
-        minoritys_teachers = 
-            collect(Iterators.flatten([agent.teachers for agent in minority_agents]))
         majoritys_teachers = 
-            collect(Iterators.flatten([agent.teachers for agent in majority_agents]))
+            collect(Iterators.flatten([agent.teachers 
+                                       for agent in majority_agents]))
 
+        n_majoritys_teachers = length(majoritys_teachers)
+        @test n_majoritys_teachers == expected_E_maj
+        
         # There should be 5 majority-group teachers for the minority group...
-
+        n_cross_group_teachers = 5
+        @test n_cross_group_teachers == length(filter(a -> a.group == 2, 
+                                                      minoritys_teachers))
         # and 5 minority-group teachers for the majority group.
+        @test n_cross_group_teachers == length(filter(a -> a.group == 1, 
+                                                      majoritys_teachers))
     end
     # @testset "Teacher-group and teacher selection works for extreme homophily values (networked)" begin
     
