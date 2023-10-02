@@ -28,7 +28,8 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
                                        ],
                                        min_group_frac = collect(0.05:0.05:0.5), 
                                        nreplicates=10, group_w_innovation = 1,
-                                       allsteps = false
+                                       allsteps = false, use_network = false,
+                                       mean_degree = 6
     )
 
     rep_idx = collect(1:nreplicates)
@@ -37,7 +38,7 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
     maj_homophily = homophily
 
     params_list = dict_list(
-        @dict min_homophily maj_homophily min_group_frac a_fitness rep_idx
+        @dict min_homophily maj_homophily min_group_frac a_fitness rep_idx use_network mean_degree
     )
 
     models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
@@ -53,7 +54,7 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :min_group_frac, :nagents, :rep_idx, :min_homophily, :maj_homophily]
+    mdata = [:a_fitness, :min_group_frac, :nagents, :rep_idx, :min_homophily, :maj_homophily, :use_network, :mean_degree]
 
     function stopfn_fixated(model, step)
         agents = allagents(model) 

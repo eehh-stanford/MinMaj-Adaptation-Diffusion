@@ -282,9 +282,10 @@ end
 """
 Run simulations to understand time series of adaptation prevalence by group.
 """
-function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10, 
+function make_all_group_prevalence_comparisons(nagents = 1000; ntrials = 10, 
         min_group_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, 
         homophily_pairs = [(0.1, 0.1), (0.75, 0.75), (0.99, 0.99)],
+        use_network = false, mean_degree = 6,
             # [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
             #  (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
         csv_write_dir = joinpath("data", "group_prevalence"),
@@ -300,7 +301,7 @@ function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10,
 
         println(savename(@dict min_homophily maj_homophily))
 
-        model_kwargs = @dict min_homophily maj_homophily min_group_frac group_w_innovation a_fitness
+        model_kwargs = @dict min_homophily maj_homophily min_group_frac group_w_innovation a_fitness use_network mean_degree
 
         adf, mdf = compare_group_prevalence(nagents; ntrials, model_kwargs...)
 
