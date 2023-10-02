@@ -145,17 +145,6 @@ end
                          )
                   )
     end
-    # @testset "Teacher-group and teacher selection works for extreme homophily values (networked)" begin
-    
-    #     m = adaptation_diffusion_model(4; min_group_frac = 0.5, 
-    #                                    min_homophily = 0.75, 
-    #                                    maj_homophily = 0.25, 
-    #                                    a_fitness = 1e2,
-    #                                    network = true
-    #                                   )
-    #     # @test false
-
-    # end
 
     @testset "Asymmetric homophily produces correct teacher selection stats, non-networked (Agent $ii)" for ii in 1:4
 
@@ -178,8 +167,107 @@ end
 
     end
     
-    @testset "Asymmetric homophily produces correct teacher selection stats, non-networked (Agent $ii)" for ii in 1:4
-        # @test false
+    @testset "Asymmetric homophily produces correct teacher selection and adoption behavior with network" begin
+
+        model = adaptation_diffusion_model(4; min_group_frac = 0.5, 
+                                           min_homophily = 0.5, 
+                                           maj_homophily = 0.5, 
+                                           use_network = true,
+                                           a_fitness = 1e6,
+                                           A_fitness = 0.1,
+                                           mean_degree = 1.5
+                                          )
+        agents = collect(allagents(model))
+
+        # Set up teachers as desired (note this means model.network won't match).
+        model[1].teachers = [2, 3]
+        model[2].teachers = [1, 4]
+        model[3].teachers = [1, 4]
+        model[4].teachers = [3]
+
+        model[1].curr_trait = a
+        model[2].curr_trait = a
+        model[3].curr_trait = A
+        model[4].curr_trait = A
+
+        @test select_teacher(model[1], model).id == 2
+        @test select_teacher(model[2], model).id == 1
+        @test select_teacher(model[3], model).id == 1
+        @test select_teacher(model[4], model).id == 3
+
+        for agent in agents
+            agent_step!(agent, model)
+        end
+
+        @test model[1].next_trait == a
+        @test model[2].next_trait == a
+        @test model[3].next_trait == a
+        @test model[4].next_trait == A
+
+        model_step!(model)
+
+        for agent in agents
+            agent_step!(agent, model)
+        end
+
+        @test model[1].next_trait == a
+        @test model[2].next_trait == a
+        @test model[3].next_trait == a
+        @test model[4].next_trait == a
     end
 
+
+    @testset "Adaptive trait always fixates when f(a)=1e6,f(A)=0.1" begin
+
+        function stopfn_fixated(model, step)
+            agents = allagents(model) 
+
+            return (
+                all(agent.curr_trait == a for agent in agents) || 
+                all(agent.curr_trait == A for agent in agents)
+            )
+        end
+
+        model = adaptation_diffusion_model(100; 
+                                           min_group_frac = 0.5, 
+                                           group_w_innovation = 1,
+                                           min_homophily = 0.5, 
+                                           maj_homophily = 0.5, 
+                                           use_network = true,
+                                           a_fitness = 1e6,
+                                           A_fitness = 0.1,
+                                           mean_degree = 4.0
+                                          )
+
+        _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)
+        @test all(agent -> agent.curr_trait == a, allagents(model))
+
+        model = adaptation_diffusion_model(100; 
+                                           min_group_frac = 0.5, 
+                                           group_w_innovation = 2,
+                                           min_homophily = 0.5, 
+                                           maj_homophily = 0.5, 
+                                           use_network = true,
+                                           a_fitness = 1e6,
+                                           A_fitness = 0.1,
+                                           mean_degree = 4.0
+                                          )
+
+        _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)
+        @test all(agent -> agent.curr_trait == a, allagents(model))
+
+        model = adaptation_diffusion_model(100; 
+                                           min_group_frac = 0.5, 
+                                           group_w_innovation = "Both",
+                                           min_homophily = 0.5, 
+                                           maj_homophily = 0.5, 
+                                           use_network = true,
+                                           a_fitness = 1e6,
+                                           A_fitness = 0.1,
+                                           mean_degree = 4.0
+                                          )
+
+        _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)
+        @test all(agent -> agent.curr_trait == a, allagents(model))
+    end
 end

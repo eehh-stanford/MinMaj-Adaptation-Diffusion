@@ -32,10 +32,8 @@ end
 function agent_step!(focal_agent::Person, model::ABM)
 
     # Agent samples randomly from one of the groups, weighted by homophily.
-    if model.networked
-        # continue
-        # group = sample_group_networked(focal_agent, model)
-        # teacher = select_teacher_networked(focal_agent, model, group)
+    if model.use_network
+        teacher = select_teacher(focal_agent, model)
     else
         group = sample_group(focal_agent, model)
         teacher = select_teacher(focal_agent, model, group)
@@ -62,8 +60,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
         end
     end
 
-
-    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents 
+    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents use_network
     if use_network
         merge!(properties, model_parameters)
         network = SimpleDiGraph(nagents)
@@ -179,7 +176,7 @@ function init_network!(model)
         end
         
         # Add new edge to the network.
-        @assert add_edge!(network, new_edge)
+        @assert add_edge!(network, new_edge) "Edge addition failed for $new_edge"
     end
 
     # Add a random 'learns-from' tie for each agent in majority group to another
@@ -204,7 +201,7 @@ function init_network!(model)
         end
         
         # Add new edge to the network.
-        add_edge!(network, new_edge)
+        @assert add_edge!(network, new_edge) "Edge addition failed for $new_edge"
     end
 
     ## Now add out-group edges.
@@ -251,16 +248,22 @@ function init_network!(model)
 end
 
 
-function select_teacher(focal_agent, model, group)
+function select_teacher(focal_agent, model, group = 0)
 
-    ## Begin payoff-biased social learning from teacher within selected group.
-    prospective_teachers = 
-        filter(agent -> (agent.group == group) && (agent != focal_agent), 
-               collect(allagents(model)))
+    # If using network, prospective teachers are in Agent instances...
+    if model.use_network
+        prospective_teachers = [model[teacher_id] for teacher_id in focal_agent.teachers]
+    # ...otherwise prospective teachers come from desired group.
+    else
+        # Begin payoff-biased social learning from teacher within selected group.
+        prospective_teachers = 
+            filter(agent -> (agent.group == group) && (agent != focal_agent), 
+                   collect(allagents(model)))
+    end
 
     teacher_weights = 
         map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-                              prospective_teachers)
+            prospective_teachers)
 
     # Renormalize weights.
     denom = Float64(sum(teacher_weights))
