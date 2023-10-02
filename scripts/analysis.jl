@@ -6,20 +6,21 @@ using RCall
 
 include("../src/experiment.jl")
 
-using Cairo, Fontconfig, Gadfly, Compose, Glob
+# using Cairo, Fontconfig, Gadfly, Compose, 
+using Glob
 
 using Colors
 logocolors = Colors.JULIA_LOGO_COLORS
 SEED_COLORS = [logocolors.purple, colorant"deepskyblue", 
                colorant"forestgreen", colorant"pink"] 
 
-PROJECT_THEME = Theme(
-    major_label_font="CMU Serif",minor_label_font="CMU Serif", 
-    point_size=5.5pt, major_label_font_size = 18pt, 
-    minor_label_font_size = 18pt, key_title_font_size=18pt, 
-    line_width = 3.5pt, key_label_font_size=14pt, #grid_line_width = 1.5pt,
-    panel_stroke = colorant"black", grid_line_width = 0pt
-)
+# PROJECT_THEME = Theme(
+#     major_label_font="CMU Serif",minor_label_font="CMU Serif", 
+#     point_size=5.5pt, major_label_font_size = 18pt, 
+#     minor_label_font_size = 18pt, key_title_font_size=18pt, 
+#     line_width = 3.5pt, key_label_font_size=14pt, #grid_line_width = 1.5pt,
+#     panel_stroke = colorant"black", grid_line_width = 0pt
+# )
 
 
 function minority_majority_comparison(nagents=100; 
@@ -173,42 +174,42 @@ R"""
 end
 
 
-function sustainability_comparison(min_group_frac = 0.05, group_w_innovation = 1)
-    afit105 = load("data/outline/a_fitness=1.05__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit12 = load("data/outline/a_fitness=1.2__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit14 = load("data/outline/a_fitness=1.4__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-    afit20 = load("data/outline/a_fitness=2.0__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+# function sustainability_comparison(min_group_frac = 0.05, group_w_innovation = 1)
+#     afit105 = load("data/outline/a_fitness=1.05__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+#     afit12 = load("data/outline/a_fitness=1.2__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+#     afit14 = load("data/outline/a_fitness=1.4__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
+#     afit20 = load("data/outline/a_fitness=2.0__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
 
-    yticks = 0.0:0.2:1.0
-    p = plot(
+#     yticks = 0.0:0.2:1.0
+#     p = plot(
 
-        layer(afit105, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
-        layer(afit12, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
-        layer(afit14, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])), 
-        layer(afit20, x=:homophily, y=:sustainability, 
-              Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[4])),
+#         layer(afit105, x=:homophily, y=:sustainability, 
+#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
+#         layer(afit12, x=:homophily, y=:sustainability, 
+#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
+#         layer(afit14, x=:homophily, y=:sustainability, 
+#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])), 
+#         layer(afit20, x=:homophily, y=:sustainability, 
+#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[4])),
 
-         Guide.manual_color_key(
-            "<i>a</i> fitness",
-            ["1.05", "1.2", "1.4", "2.0"], 
-            [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],
-        ),
+#          Guide.manual_color_key(
+#             "<i>a</i> fitness",
+#             ["1.05", "1.2", "1.4", "2.0"], 
+#             [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],
+#         ),
         
-        Guide.xlabel("Homophily"),
-        Guide.yticks(ticks=yticks),
-        Guide.ylabel("Sustainability"),
-        PROJECT_THEME
-    )
+#         Guide.xlabel("Homophily"),
+#         Guide.yticks(ticks=yticks),
+#         Guide.ylabel("Sustainability"),
+#         PROJECT_THEME
+#     )
 
-    draw(
-         PDF("plots/outline/comparison_minsize=$(min_group_frac)_group_w_innovation=$(group_w_innovation).pdf",
-             5.25inch, 3.5inch), 
-        p
-    )
-end
+#     draw(
+#          PDF("plots/outline/comparison_minsize=$(min_group_frac)_group_w_innovation=$(group_w_innovation).pdf",
+#              5.25inch, 3.5inch), 
+#         p
+#     )
+# end
 
 
 function sustainability_vs_homophily(nagents = 100;
