@@ -49,6 +49,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
                                     A_fitness = 1.0, a_fitness = 10.0, 
                                     min_homophily = 1.0, maj_homophily = 1.0, 
                                     rep_idx = nothing, use_network = false, 
+                                    mean_degree = 3,
                                     model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
@@ -60,9 +61,11 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
         end
     end
 
-    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents use_network
+    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents use_network mean_degree
+
+    merge!(properties, model_parameters)
+
     if use_network
-        merge!(properties, model_parameters)
         network = SimpleDiGraph(nagents)
         merge!(properties, Dict(:network => network))
     end
@@ -108,7 +111,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
 
         add_agent!(agent_to_add, model)
     end
-    
+
     if use_network
         init_network!(model)
     end

@@ -41,6 +41,7 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
         @dict min_homophily maj_homophily min_group_frac a_fitness rep_idx use_network mean_degree
     )
 
+    println("Building models...")
     models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
               for params in params_list]
 
@@ -67,13 +68,13 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
 
     # For now ignore non-extremal time steps.
     when(model, step) = stopfn_fixated(model, step)
+
+    println("Starting ensemblerun...")
     adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
     
     res = innerjoin(adf, mdf, on = [:step, :ensemble])
-
-    println(first(res, 15))
 
     return res
 end

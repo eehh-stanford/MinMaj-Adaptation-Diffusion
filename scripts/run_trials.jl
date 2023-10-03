@@ -51,6 +51,16 @@ function parse_cli()
             help = "Population size, N"
             default = 100
             arg_type = Int
+
+        "--use_network"
+            help = "Use network?"
+            default = false
+            arg_type = Bool
+
+        "--mean_degree"
+            help = "Mean degree of random network"
+            default = 6
+            arg_type = Int
     end
 
     return parse_args(s)
