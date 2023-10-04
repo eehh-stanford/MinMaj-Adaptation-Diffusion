@@ -43,15 +43,15 @@ success_over_groups_jitter <- function(
   
   # Need each outcome for every homophily value separated.
   aggdf <- full_df %>%
-    group_by(homophily_1, homophily_2, group_w_innovation, group_1_frac) %>%
+    group_by(min_homophily, maj_homophily, group_w_innovation, min_group_frac) %>%
     summarize(success_rate = mean(frac_a_curr_trait))
   
   aggdf$group_w_innovation <- map_chr(aggdf$group_w_innovation, group_start_remap)
-  aggdf$group_1_frac <- factor(aggdf$group_1_frac)
+  aggdf$min_group_frac <- factor(aggdf$min_group_frac)
   
   aggdf <- rename(aggdf, start_group = group_w_innovation, 
-                  minority_group_size = group_1_frac,
-                  h_min = homophily_1, h_maj = homophily_2)
+                  minority_group_size = min_group_frac,
+                  h_min = min_homophily, h_maj = maj_homophily)
   
   # Now create boxplot with start group on x-axis, success_rate on y-axis, 
   # and color-coded by minority group size.
@@ -120,7 +120,7 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
     full_df$success = factor(map_chr(full_df$frac_a_curr_trait, success_remap))
 # full_df
     aggdf <- full_df %>%
-      filter(group_1_frac %in% minority_pop_sizes) %>%
+      filter(min_group_frac %in% minority_pop_sizes) %>%
       group_by(group_w_innovation, success) %>%
       summarize(step = mean(step))
     
@@ -160,7 +160,7 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
   # group_w_vals <- c("1")
   for (group_w_innovation in group_w_vals) {
     
-    files <- list.files("data/main_parts", 
+    files <- list.files(csv_dir, 
                         pattern = paste0("group_w_innovation=", group_w_innovation),
                         full.names = TRUE)
     
@@ -270,10 +270,10 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
     }
     # minority group size sensitivity.
-    for (this_group_1_frac in c(0.2, 0.35, 0.5)) {
+    for (this_min_group_frac in c(0.2, 0.35, 0.5)) {
       
-      this_tbl <- tbl[tbl$group_1_frac == this_group_1_frac, ]
-      this_write_dir <- file.path(write_dir, "m", this_group_1_frac)
+      this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
+      this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
       
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
@@ -304,9 +304,9 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
                           cmap_limits = c(0.0, 0.8)) {
   
   asymm_agg <- asymm_tbl %>%
-    filter(homophily_1 != 0.99) %>% 
-    filter(homophily_2 != 0.99) %>%
-    group_by(homophily_1, homophily_2, group_w_innovation) %>%
+    filter(min_homophily != 0.99) %>% 
+    filter(maj_homophily != 0.99) %>%
+    group_by(min_homophily, maj_homophily, group_w_innovation) %>%
     summarize(sustainability = mean(frac_a_curr_trait),
               step = mean(step))
   # return (asymm_agg)
@@ -321,7 +321,7 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
   
     asymm_max_line <-
       asymm_lim_agg %>% 
-        group_by(homophily_1) %>% 
+        group_by(min_homophily) %>% 
         filter(sustainability == max(sustainability))
     
     print(asymm_max_line)
@@ -331,7 +331,7 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
   } else if (measure == "step") {
     asymm_max_line <-
       asymm_lim_agg %>% 
-      group_by(homophily_1) %>% 
+      group_by(min_homophily) %>% 
       filter(step == max(step))
     
     print(asymm_max_line)
@@ -342,15 +342,15 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
     stop ("measure not recognized")
   }
   
-  h1max <- max_sustainability$homophily_1
-  h2max <- max_sustainability$homophily_2
+  h1max <- max_sustainability$min_homophily
+  h2max <- max_sustainability$maj_homophily
   
   if (measure == "sustainability") {
-    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = min_homophily, y = maj_homophily, fill = sustainability))
     measure_label <- "Success\nrate"
     # cmap_limits <- c(0.0, 1.0)
   } else if (measure == "step") {
-    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = min_homophily, y = maj_homophily, fill = step))
     measure_label <- "Mean\nsteps"
     cmap_limits = c(0, 60)
   } else {
@@ -360,9 +360,9 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
    ggplotstart + 
     geom_tile() +
     scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF", limits = cmap_limits) +
-    geom_point(data = asymm_max_line, aes(x = homophily_1, y = homophily_2)) +
-    geom_smooth(data = asymm_max_line, aes(x = homophily_1, y = homophily_2), se=FALSE, n = 5) +
-    geom_point(data = max_sustainability, aes(x=homophily_1, y=homophily_2), 
+    geom_point(data = asymm_max_line, aes(x = min_homophily, y = maj_homophily)) +
+    geom_smooth(data = asymm_max_line, aes(x = min_homophily, y = maj_homophily), se=FALSE, n = 5) +
+    geom_point(data = max_sustainability, aes(x=min_homophily, y=maj_homophily), 
                shape='diamond', size=5, color='red') +
     labs(x = TeX("Minority group homophily, $h_{min}$"), 
          y = TeX("Majority group homophily, $h_{maj}$")) +
@@ -426,19 +426,19 @@ supp_mean_plots <- function(csv_dir = "data/supp_parts",
   }
 
   # Now do the same for minority fraction and...
-  for (this_group_1_frac in c(0.2, 0.35, 0.5)) {
-    this_tbl <- tbl[tbl$group_1_frac == this_group_1_frac, ]
+  for (this_min_group_frac in c(0.2, 0.35, 0.5)) {
+    this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
 
     success_over_groups_jitter(NULL, success_write_dir, 
-                               paste0("group_1_frac=", this_group_1_frac, ".pdf"),
+                               paste0("min_group_frac=", this_min_group_frac, ".pdf"),
                                tbl_override = this_tbl,
                                this_ylim = c(0.0, 1.0)) 
 
     steps_ylim = c(0, 80)
 
     steps_over_groups_success_failure(NULL, steps_write_dir, 
-                                      paste0("group_1_frac=", this_group_1_frac, ".pdf"),
-                                      minority_pop_sizes = c(this_group_1_frac),
+                                      paste0("min_group_frac=", this_min_group_frac, ".pdf"),
+                                      minority_pop_sizes = c(this_min_group_frac),
                                       tbl_override = this_tbl,
                                       this_ylim = steps_ylim) 
   }
