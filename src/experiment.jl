@@ -2,12 +2,14 @@ using DataFrames
 
 using Distributed
 using StatsBase
+using ThreadsX
 
 
 # Set up multiprocessing.
 try
     num_cores = parse(Int, ENV["SLURM_CPUS_PER_TASK"])
-    addprocs(num_cores)
+    println("ADDING $num_cores PROCESSORS!")
+    addprocs(num_cores, exeflags="--project")
 catch
     desired_nprocs = length(Sys.cpu_info())
 
@@ -42,8 +44,13 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
     )
 
     println("Building models...")
-    models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
-              for params in params_list]
+    # models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
+    #           for params in params_list]
+    models = ThreadsX.collect(
+        adaptation_diffusion_model(nagents; group_w_innovation, params...)
+        for params in params_list
+    )
+    
 
     # adata = [(:curr_trait, fixated)]
     frac_a(v) = sum(v .== a) / length(v)
