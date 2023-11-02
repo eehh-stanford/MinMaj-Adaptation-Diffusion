@@ -301,7 +301,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
 
 asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, 
                           measure = "sustainability", 
-                          cmap_limits = c(0.0, 0.8)) {
+                          cmap_limits = c(0.0, 0.7)) {
   
   asymm_agg <- asymm_tbl %>%
     filter(min_homophily != 0.99) %>% 
