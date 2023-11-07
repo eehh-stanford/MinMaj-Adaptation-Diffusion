@@ -395,3 +395,17 @@ function make_full_asymm_data(partition_dir = "data/main_parts", output_dir = "d
 
     end
 end
+
+
+#=
+
+=# 
+function network_percolation_video()
+
+    # Initialize and run model.
+
+    # Export adjacency matrix and 
+
+    # Call R script to v
+
+end
