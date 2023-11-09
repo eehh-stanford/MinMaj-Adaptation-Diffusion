@@ -46,7 +46,7 @@ end
 
 function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0, 
                                     group_w_innovation = 1, 
-                                    A_fitness = 1.0, a_fitness = 10.0, 
+                                    A_fitness = 1.0, a_fitness = 1.2, 
                                     min_homophily = 1.0, maj_homophily = 1.0, 
                                     rep_idx = nothing, use_network = false, 
                                     mean_degree = 3,
@@ -189,8 +189,10 @@ function init_network!(model)
         selected_teacher = sample(possible_teacher_ids)
         add_edge!(network, maj_id, selected_teacher)
     end
+
     # Add the remaining in-majority-group ties.
     remaining_maj_ingroup = E_maj_ingroup - length(majority_ids)
+
     for _ in 1:remaining_maj_ingroup
 
         # Generate a new edge that may already exist in social network.

@@ -174,44 +174,6 @@ R"""
 end
 
 
-# function sustainability_comparison(min_group_frac = 0.05, group_w_innovation = 1)
-#     afit105 = load("data/outline/a_fitness=1.05__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-#     afit12 = load("data/outline/a_fitness=1.2__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-#     afit14 = load("data/outline/a_fitness=1.4__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-#     afit20 = load("data/outline/a_fitness=2.0__min_group_frac=$(min_group_frac)__group_w_innovation=$(group_w_innovation).jld2")["agg"] 
-
-#     yticks = 0.0:0.2:1.0
-#     p = plot(
-
-#         layer(afit105, x=:homophily, y=:sustainability, 
-#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[1])), 
-#         layer(afit12, x=:homophily, y=:sustainability, 
-#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[2])), 
-#         layer(afit14, x=:homophily, y=:sustainability, 
-#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[3])), 
-#         layer(afit20, x=:homophily, y=:sustainability, 
-#               Geom.line, Geom.point, Theme(point_size=2.5pt, line_width=1.5pt, default_color=SEED_COLORS[4])),
-
-#          Guide.manual_color_key(
-#             "<i>a</i> fitness",
-#             ["1.05", "1.2", "1.4", "2.0"], 
-#             [SEED_COLORS[1], SEED_COLORS[2], SEED_COLORS[3], SEED_COLORS[4]],
-#         ),
-        
-#         Guide.xlabel("Homophily"),
-#         Guide.yticks(ticks=yticks),
-#         Guide.ylabel("Sustainability"),
-#         PROJECT_THEME
-#     )
-
-#     draw(
-#          PDF("plots/outline/comparison_minsize=$(min_group_frac)_group_w_innovation=$(group_w_innovation).pdf",
-#              5.25inch, 3.5inch), 
-#         p
-#     )
-# end
-
-
 function sustainability_vs_homophily(nagents = 100;
         a_fitness=1.4, min_group_frac = 0.05, nreplicates = 1000, 
         sync_dir = "data/outline", group_w_innovation = 1, 
@@ -398,14 +360,54 @@ end
 
 
 #=
+Script to run a networked minority-majority model and create an animation.
 
+See adaptation_diffusion_model signature for model_kw_args.
 =# 
-function network_percolation_video()
+function network_percolation_animation(nagents = 15; 
+                                       write_dir = "data/percolation",
+                                       use_network = true,
+                                       mean_degree = 3,
+                                       min_group_frac = 1.0/3.0,
+                                       min_homophily = 1.0/3.0,
+                                       maj_homophily = 2.0/3.0,
+                                       group_w_innovation = 1,
+                                       model_kw_args...)
 
     # Initialize and run model.
+    model = adaptation_diffusion_model(nagents; 
+                                   use_network, mean_degree, min_group_frac,
+                                   min_homophily, maj_homophily, group_w_innovation,
+                                   model_kw_args...)
 
-    # Export adjacency matrix and 
+    adata = [:group, :curr_trait]
 
-    # Call R script to v
+    function stopfn_fixated(model, step)
+        agents = allagents(model) 
+
+        return (
+            all(agent.curr_trait == a for agent in agents) || 
+            all(agent.curr_trait == A for agent in agents)
+        )
+    end
+
+    series_df, _ = run!(model, agent_step!, model_step!, stopfn_fixated; adata)
+    # Extract adjacency matrix with "arrows" going from teacher to learner;
+    # in the model these are switched so that it could read ("learner learns
+    # from teacher").
+    adjacency_df = DataFrame(Matrix(adjacency_matrix(model.network; dir=:out)), 
+                             map(aid -> string(aid), 1:nagents))
+
+    # Export adjacency matrix and series table.
+    # Check if temp dir exists for writing; create if not.
+    if !isdir(write_dir)
+        mkpath(write_dir)
+    end
+
+    CSV.write(joinpath(write_dir, "series.csv"), series_df)
+    CSV.write(joinpath(write_dir, "adjacency.csv"), adjacency_df)
+
+    # Call R script to visualize networks at each time step.
+    
 
 end

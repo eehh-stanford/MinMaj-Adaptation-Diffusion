@@ -25,14 +25,13 @@ end
 
 
 function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0, 
-                                       homophily = [
-                                        collect(0.0:0.05:0.95)..., 0.99
-                                       ],
-                                       min_group_frac = collect(0.05:0.05:0.5), 
-                                       nreplicates=10, group_w_innovation = 1,
-                                       allsteps = false, use_network = false,
-                                       mean_degree = 6
-    )
+                                         homophily = [
+                                             collect(0.0:0.05:0.95)..., 0.99
+                                         ],
+                                         min_group_frac = collect(0.05:0.05:0.5), 
+                                         nreplicates=10, group_w_innovation = 1,
+                                         allsteps = false, use_network = false,
+                                         mean_degree = 6)
 
     rep_idx = collect(1:nreplicates)
 
