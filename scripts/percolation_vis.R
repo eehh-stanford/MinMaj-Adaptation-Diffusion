@@ -21,8 +21,10 @@ load_diffusion <- function(adaptation_series_csv = "data/percolation/series.csv"
 
 plot_all <- function(adjacency_matrix_csv = "data/percolation/adjacency.csv", 
                      diffusion_series_csv = "data/percolation/series.csv",
+                     write_dir = "percolation_vis/",
                      xvec = c(rep(0, 5), rep(2, 5), rep(3, 5)), 
-                     yvec = rep(c(0, 1, 2, 3, 4), 3)) {
+                     yvec = rep(c(0, 1, 2, 3, 4), 3),
+                     max_step = NULL) {
   
   adjacency_matrix <- load_adjacency(adjacency_matrix_csv)
   diffusion_series <- load_diffusion(diffusion_series_csv)
@@ -34,7 +36,10 @@ plot_all <- function(adjacency_matrix_csv = "data/percolation/adjacency.csv",
   # adaptive, grey for non-adaptive.
   ds <- diffusion_series
   steps <- unique(ds$step)
-  steps <- c(0,1,2,3)  # comment out for full run
+  if (!is.null(max_step)) {
+    steps <- 0:max_step
+  }
+  # steps <- c(0,1,2,3)  # comment out for full run
   agents_ids <- unique(ds$id)
   nagents <- max(agents_ids)
   
@@ -42,16 +47,19 @@ plot_all <- function(adjacency_matrix_csv = "data/percolation/adjacency.csv",
   
   # Create and write a pdf for each plot.
   for (this_step in steps) {
-    print(step)
+
     colors <- rep("grey", nagents)
     step_df <- filter(ds, step == this_step)
-    print(step_df)
-    print("")
 
     colors[step_df$curr_trait == "a"] = "red"
 
-    plot(network, vertex.color = colors, edge.arrow.size=0.4, arrow.mode = 1, 
-         edge.curved = 0.25, margin = rep(0, 4), layout = vertex_coords)
+    file_name <- paste0(write_dir, "/", this_step, ".pdf")
+    pdf(file_name, width = 5, height=5, bg = "white")
+    # png(file_name, width = 5, height=5)
+    plot(network, vertex.color = colors, edge.arrow.size=0.4, arrow.mode = 1, main = paste("t =", toString(this_step)),
+         edge.curved = 0.45, layout = vertex_coords, margin = 0.0, vertex.label = rep("", nagents))
+    dev.off()
+    
   }
   
   # return (network)
