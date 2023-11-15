@@ -1,4 +1,5 @@
 library(igraph)
+library(dplyr)
 
 load_adjacency <- function(adjacency_matrix_csv = "data/percolation/adjacency.csv") {
   

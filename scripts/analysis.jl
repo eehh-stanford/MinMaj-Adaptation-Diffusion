@@ -3,6 +3,7 @@ using DataFrames
 using DrWatson
 using JLD2
 using RCall
+using Graphs
 
 include("../src/experiment.jl")
 
@@ -407,7 +408,9 @@ function network_percolation_animation(nagents = 15;
     CSV.write(joinpath(write_dir, "series.csv"), series_df)
     CSV.write(joinpath(write_dir, "adjacency.csv"), adjacency_df)
 
+
+    return series_df
     # Call R script to visualize networks at each time step.
-    
+        
 
 end

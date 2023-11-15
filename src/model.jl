@@ -151,10 +151,10 @@ function init_network!(model)
     E_min = model.nagents * model.min_group_frac * model.mean_degree
     E_maj = E - E_min
 
-    E_min_ingroup = round(Int, E_min * ((1 + model.min_homophily) / 2.0))
+    E_min_ingroup = floor(Int, E_min * ((1 + model.min_homophily) / 2.0))
     E_min_outgroup = E_min - E_min_ingroup
 
-    E_maj_ingroup = round(Int, E_maj * ((1 + model.maj_homophily) / 2.0))
+    E_maj_ingroup = floor(Int, E_maj * ((1 + model.maj_homophily) / 2.0))
     E_maj_outgroup = E_maj - E_maj_ingroup
 
     # Add a random 'learns-from' tie for each agent in minority group to another
