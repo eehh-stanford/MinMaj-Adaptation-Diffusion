@@ -59,8 +59,5 @@ plot_all <- function(adjacency_matrix_csv = "data/percolation/adjacency.csv",
     plot(network, vertex.color = colors, edge.arrow.size=0.4, arrow.mode = 1, main = paste("t =", toString(this_step)),
          edge.curved = 0.45, layout = vertex_coords, margin = 0.0, vertex.label = rep("", nagents))
     dev.off()
-    
   }
-  
-  # return (network)
 }
