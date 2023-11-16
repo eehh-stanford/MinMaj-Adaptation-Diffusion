@@ -1,2 +1,4 @@
 tmp_R.csv
 *.out
+data/
+percolation_vis/
