@@ -30,19 +30,33 @@ probability_node_has_edge <- function(n_nodes, n_edges) {
 
 # Probability a minority group member teaches at least one majority group member.
 minmaj_model_probability_minority_has <- function(N, m, kbar, hom) {
+  
   n_min_nodes <- round(N * m)
-  print(n_min_nodes)
+  
   total_min_edges <- round(n_min_nodes * kbar)
-  print(total_min_edges)
+  
   hom_coeff = ((1 - hom)/2.0)
   n_outgroup_edges <- round(total_min_edges * hom_coeff)
-  print(n_outgroup_edges)
+  
   
   return (probability_node_has_edge(n_min_nodes, n_outgroup_edges))
 }
 
 
-plot_over_N_homophily <- function(N = c(30, 100, 200), m = seq(0.05, 0.5, 0.05), kbar = 4, 
+minmaj_model_probability_majority_has <- function(N, m, kbar, hom) {
+  n_min_nodes <- round(N * m)
+  
+  total_min_edges <- round(n_min_nodes * kbar)
+  
+  hom_coeff = ((1 - hom)/2.0)
+  n_outgroup_edges <- round(total_min_edges * hom_coeff)
+  
+  
+  return (probability_node_has_edge(n_min_nodes, n_outgroup_edges))
+}
+
+
+plot_minmaj_over_m <- function(N = c(30, 100, 200), m = seq(0.05, 0.5, 0.05), kbar = 4, 
                                   homophily = c(0.0, 0.5), write_dir = "figures"){
   
   # Generate data to plot...
@@ -69,7 +83,31 @@ plot_over_N_homophily <- function(N = c(30, 100, 200), m = seq(0.05, 0.5, 0.05),
   ggsave(save_path, width = 7.5, height = 5.15)
 }
 
-
-minmaj_model_probability_majority_has <- function(N, m, kbar, hom) {
+plot_majmaj_over_h <- function(N = c(30, 100, 200), m = seq(0.05, 0.5, 0.05), kbar = 4, 
+                               homophily = c(0.0, 0.5), write_dir = "figures"){
   
+  # Generate data to plot using dplyr ("third method" here: https://rpubs.com/euclid/343644)
+  plot_data <-
+    # ...first create Cartesian product ("cross join") of parameters,...
+    CJ(N, m, kbar, homophily) %>%
+    # ...then calculate probability a given minority node teaches at least one majority agent.
+    by_row(function (r) minmaj_model_probability_minority_has(r$N, r$m, r$kbar, r$homophily),
+           .to = "pminmaj", .collate = "cols") %>%
+    # ...then calculate probability a given minority node teaches at least one majority agent.
+    by_row(function (r) minmaj_model_probability_majority_has(r$N, r$m, r$kbar, r$homophily),
+           .to = "pmajmaj", .collate = "cols") 
+  
+  plot_data$N <- as.factor(plot_data$N)
+  plot_data$homophily <- as.factor(plot_data$homophily)
+  
+  ggplot(plot_data, aes(x=m, y=prob)) + 
+    geom_line(aes(linetype=N, color=homophily), size=1) +
+    scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
+    xlab("Minority fraction, " ~ italic("m")) + 
+    ylab("Probability of edge to majority") +
+    mytheme
+  
+  save_path <- file.path(write_dir, "prob_min_teaches_maj.pdf")
+  
+  ggsave(save_path, width = 7.5, height = 5.15)
 }
