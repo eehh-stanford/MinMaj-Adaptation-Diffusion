@@ -38,20 +38,19 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
     min_homophily = homophily
     maj_homophily = homophily
 
+    print(@dict min_homophily maj_homophily min_group_frac a_fitness rep_idx use_network mean_degree)
     params_list = dict_list(
         @dict min_homophily maj_homophily min_group_frac a_fitness rep_idx use_network mean_degree
     )
 
-    println("Building models...")
-    # models = [adaptation_diffusion_model(nagents; group_w_innovation, params...) 
-    #           for params in params_list]
+    # print(params_list)
+
+    # println("Building models...")
     models = ThreadsX.collect(
         adaptation_diffusion_model(nagents; group_w_innovation, params...)
         for params in params_list
     )
     
-
-    # adata = [(:curr_trait, fixated)]
     frac_a(v) = sum(v .== a) / length(v)
 
     is_minority(x) = x.group == 1

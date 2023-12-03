@@ -1,6 +1,6 @@
 using Agents
 using DrWatson: @dict
-using Graphs: SimpleDiGraph, add_edge!, has_edge
+using Graphs: SimpleDiGraph, add_edge!, has_edge, is_weakly_connected
 using StatsBase
 
 
@@ -71,7 +71,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
     end
 
     model = ABM(Person, scheduler = Schedulers.fastest; properties)
-    flcutoff = ceil(min_group_frac * nagents)
+    flcutoff = floor(min_group_frac * nagents)
     min_group_cutoff = Int(flcutoff)
     
     for aidx in 1:nagents
@@ -113,7 +113,11 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
     end
 
     if use_network
-        init_network!(model)
+        weakly_connected = false
+        while !weakly_connected
+            init_network!(model)
+            weakly_connected = is_weakly_connected(model.network)
+        end
     end
 
     return model
@@ -151,10 +155,10 @@ function init_network!(model)
     E_min = model.nagents * model.min_group_frac * model.mean_degree
     E_maj = E - E_min
 
-    E_min_ingroup = floor(Int, E_min * ((1 + model.min_homophily) / 2.0))
+    E_min_ingroup = ceil(Int, E_min * ((1 + model.min_homophily) / 2.0))
     E_min_outgroup = E_min - E_min_ingroup
 
-    E_maj_ingroup = floor(Int, E_maj * ((1 + model.maj_homophily) / 2.0))
+    E_maj_ingroup = ceil(Int, E_maj * ((1 + model.maj_homophily) / 2.0))
     E_maj_outgroup = E_maj - E_maj_ingroup
 
     # Add a random 'learns-from' tie for each agent in minority group to another
@@ -162,7 +166,11 @@ function init_network!(model)
     for min_id in minority_ids
         possible_teacher_ids = filter(id -> id ≠ min_id, minority_ids)
         selected_teacher = sample(possible_teacher_ids)
-        @assert add_edge!(network, min_id, selected_teacher)
+        # @assert add_edge!(network, min_id, selected_teacher)
+        successful_add = false
+        while !successful_add
+            successful_add = add_edge!(network, min_id, selected_teacher)
+        end
     end
     # Add the remaining in-minority-group ties.
     remaining_min_ingroup = E_min_ingroup - length(minority_ids)
@@ -187,7 +195,12 @@ function init_network!(model)
     for maj_id in majority_ids
         possible_teacher_ids = filter(idx -> idx ≠ maj_id, majority_ids)
         selected_teacher = sample(possible_teacher_ids)
-        add_edge!(network, maj_id, selected_teacher)
+        # add_edge!(network, maj_id, selected_teacher)
+
+        successful_add = false
+        while !successful_add
+            successful_add = add_edge!(network, maj_id, selected_teacher)
+        end
     end
 
     # Add the remaining in-majority-group ties.
