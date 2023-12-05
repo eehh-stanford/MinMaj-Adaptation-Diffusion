@@ -79,7 +79,7 @@ probability_node_is_teacher <- function(metapop_size, minority_fraction, mean_de
   return (1 - (numerator / denominator))
 }
 
-plot_over_m <- function(N = c(30, 100, 10000), m = seq(0.05, 0.5, 0.05), kbar = 6, 
+plot_over_m <- function(N = c(30, 100, 10000), m = seq(0.05, 0.5, 0.01), kbar = 6, 
                         homophily = c(0.0, 0.25, 0.5, 0.75, 0.9), teacher_group = "minority", 
                         learner_group = "majority", write_dir = "new_prob_figs") {
   
