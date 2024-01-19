@@ -17,6 +17,16 @@ choose_nodes_w_replacement <- function(n_nodes, n_edges) {
 }
 
 
+probability_node_hasnt_edge <- function(group_size, mean_degree, homophily, ) {
+  num <- choose_nodes_w_replacement(n_nodes - 1, n_edges)
+  print(num)
+  denom <- choose_nodes_w_replacement(n_nodes, n_edges)
+  print(denom)
+  
+  
+  
+  return (num / denom)
+}
 
 # probability_node_hasnt_edge <- function(n_nodes, n_edges) {
 #   num <- choose_nodes_w_replacement(n_nodes - 1, n_edges)
