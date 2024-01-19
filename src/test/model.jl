@@ -235,6 +235,8 @@ end
         :min_group_frac => [0.05, 0.2, 0.35, 0.5],
         :a_fitness => [1.2],
         :nagents => [500, 1000, 2000],
+        # :nagents => [50, 100, 1000],
+        # :nagents => [100, 1000],
         :mean_degree => [3, 6, 9],
         :min_homophily => collect(0.0:0.1:0.9),
         :maj_homophily => collect(0.0:0.1:0.9),
@@ -251,5 +253,4 @@ end
             @test all([is_weakly_connected(model.network) for model in models])
         end
     end
-
 end
