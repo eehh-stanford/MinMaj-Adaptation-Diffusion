@@ -53,8 +53,29 @@ to run the supplemental analyses. This creates a fresh, distinct version of simu
 
 ## Analysis
 
+With the addition of a network-theoretic modeling option there are two forms of
+analysis: (1) processing and calculating success rates and time to fixation from
+ABM output data, and (2) analyzing the frequency of network ties given different
+parameter settings.
+
+### Success rates and times to fixation
+
 Use `main_asymm_heatmaps` to create the main heatmap results of _success rate_ as a function of $h_\mathrm{min}$ and $h_\mathrm{maj}$, which can be found in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L72). For creating the heatmaps of average time to model fixation, pass the keyword argument `measure = "step"` to `main_asymm_heatmaps`. Similarly, to create supplemental analyses use the `supp_asymm_heatmaps` function in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L15).
 
 To create the heatmaps you need the output data from the simulations presented in our journal article, stored in the `data` folder in the root project directory. To get the data in the right place, first create a `data` directory, then download and unzip the two zip files in our OSF repository: https://osf.io/cd9hx/. 
 
 To create time series of individual model runs, use the `make_all_group_prevalence_comparisons` function in [`scripts/analysis.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/analysis.jl#L290).
+
+
+### Network tie frequencies
+
+To understand the minority-group incubator and majority-group reservoir effects,
+we calculated the probability that a minority group member teaches
+at least one majority group member (currently Equation 6) and the probability
+that a majority group member teaches another majority group member (currently 
+Equation 9). These probabilities are functions of minoirty group fraction, 
+$m$, and majority group homophily, $h_{\mathrm{maj}}$. We inspect plots of
+each partial function individually. Plots over $m$ are made with the
+`plot_over_m` function, and plots over $h$ are made with the `plot_over_h`
+function. Both functions are contained in the file 
+[`scripts/graph_counting.R`](/scripts/graph_counting.R).
