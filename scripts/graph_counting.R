@@ -116,16 +116,16 @@ plot_over_h <- function(N = c(50, 100, 1000), m = 0.05, kbar = 6,
   plot_data <-
     # ...first create Cartesian product ("cross join") of parameters,...
     CJ(N, m, kbar, homophily) %>%
-    # ...then calculate probability a given minority node teaches at least one majority agent...
-    by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily, 
-                                                    teacher_group = "minority"),
-           .to = "pminmaj", .collate = "cols") %>%
-    # ...then calculate probability a given majority node teaches at least one majority agent...
-    by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily,
-                                                    teacher_group = "majority"),
-           .to = "pmajmaj", .collate = "cols") %>%
-    # ...finally melt columns...
-    melt(variable.name = "ProbType", measure=c("pminmaj", "pmajmaj"))
+      # ...then calculate probability a given minority node teaches at least one majority agent...
+      by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily, 
+                                                      teacher_group = "minority"),
+             .to = "pminmaj", .collate = "cols") %>%
+      # ...then calculate probability a given majority node teaches at least one majority agent...
+      by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily,
+                                                      teacher_group = "majority"),
+             .to = "pmajmaj", .collate = "cols") %>%
+      # ...finally melt columns...
+      melt(variable.name = "ProbType", measure=c("pminmaj", "pmajmaj"))
   
   plot_data$N <- as.factor(plot_data$N)
   # plot_data$homophily <- as.factor(plot_data$homophily)
