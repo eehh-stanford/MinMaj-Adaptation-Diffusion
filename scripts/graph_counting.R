@@ -3,6 +3,7 @@ library(data.table)
 library(purrrlyr)
 library(reshape2)
 library(scales)
+library(latex2exp)
 
 
 mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
@@ -94,11 +95,19 @@ plot_over_m <- function(N = c(50, 100, 1000), m = seq(0.05, 0.5, 0.01), kbar = 6
   plot_data$N <- as.factor(plot_data$N)
   plot_data$homophily <- as.factor(plot_data$homophily)
   
+  if (teacher_group == "minority") {
+    ylabel <- TeX('$p_{maj \\leftarrow min}$')
+  } else {
+    ylabel <- TeX('$p_{maj \\leftarrow maj}$')
+  }
+  
+  print(ylabel)
+  
   ggplot(plot_data, aes(x=m, y=prob)) + 
     geom_line(aes(linetype=N, color=homophily), size=1) +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
     xlab("Minority fraction, " ~ italic("m")) + 
-    ylab(paste0("Prob. that ", substring(teacher_group, 1, 3), ". teaches maj.")) +
+    ylab(ylabel) +
     # ylim(0.0, 0.9) +
     mytheme
   
@@ -142,6 +151,7 @@ plot_over_h <- function(N = c(50, 100, 1000), m = 0.05, kbar = 6,
     geom_hline(yintercept = prob_maj_optimal, linetype="dashed", color=c2) +
     geom_hline(yintercept = prob_min_optimal, linetype="dashed", color=c1) +
     geom_line(aes(linetype=N, color=ProbType), size=1) +
+    scale_color_discrete(labels=c(TeX('$p_{maj \\leftarrow min}$'),TeX('$p_{maj \\leftarrow maj}$'))) + labs(color = "Prob. Type") +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
     xlab("Majority homophily, " ~ italic("h")) + 
     ylab("Probability") +
