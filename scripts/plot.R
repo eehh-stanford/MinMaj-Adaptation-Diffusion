@@ -23,6 +23,91 @@ group_start_remap <- function(group_start) {
     return ("Both")
 }
 
+success_over_groups_compare_maxsuccess_minfrac <- function(supp_dir = "data/supp_network_maxsteps/",
+                                                           write_path = "figures/compare_max_m.pdf",
+                                                           tbl_override = NULL) {
+  if (is.null(tbl_override)) {
+    full_df <- load_from_parts(csv_dirs, "data/supp_network_maxsteps_sync.csv")
+  } else {
+    full_df <- tbl_override
+  }
+  
+  aggdf <- full_df %>%
+    filter(mean_degree == 6) %>% filter(nagents == 1000) %>%
+    group_by(nagents, min_homophily, maj_homophily, group_w_innovation, min_group_frac) %>%
+    summarize(success_rate = mean(frac_a_curr_trait)) %>%
+    group_by(min_group_frac, group_w_innovation) %>%
+    summarize(max_success_rate = max(success_rate))
+  
+  aggdf <- rename(aggdf, start_group = group_w_innovation) 
+  aggdf$start_group[aggdf$start_group == 1] <- "Minority"
+  aggdf$start_group[aggdf$start_group == 2] <- "Majority"
+  aggdf$start_group <- factor(aggdf$start_group, level=c("Majority", "Minority", "Both"))
+  aggdf$min_group_frac <- factor(aggdf$min_group_frac)
+  
+  p <- ggplot(aggdf, aes(x = start_group,  #factor(start_group, level=c("Majority", "Minority", "Both")), 
+                         y = max_success_rate,
+                         group = min_group_frac)) + 
+    geom_point(aes(color=min_group_frac), size=3.5) +
+    geom_line(aes(color=min_group_frac), size=2) +
+    scale_color_discrete(name=TeX("Minority frac., $m$")) +
+    xlab("Start group") + 
+    ylab("Maximum success rate") + 
+    mytheme
+  
+  ggsave(write_path, width=8, height=3.75)
+  
+  return (p)
+}
+
+
+success_over_groups_compare_kbar <- function(main_dir = "data/main_network_maxsteps",
+                                             supp_dir = "data/supp_network_maxsteps",
+                                             write_filename = "figures/compare_max_k",
+                                             tbl_override = NULL) {
+  
+  # Filter out files that are not k sensitivity files from supp_dir.
+}
+
+
+success_over_groups_compare_maxsuccess_N <- function(supp_dir = "data/supp_network_maxsteps/",
+                                         write_path = "figures/compare_max_N.pdf",
+                                         write_filename = "compareN.pdf",
+                                         tbl_override = NULL) {
+  if (is.null(tbl_override)) {
+    full_df <- load_from_parts(csv_dirs, "data/supp_network_maxsteps_sync.csv")
+  } else {
+    full_df <- tbl_override
+  }
+  
+  aggdf <- full_df %>%
+    filter(mean_degree == 6) %>%
+    group_by(nagents, min_homophily, maj_homophily, group_w_innovation, min_group_frac) %>%
+    summarize(success_rate = mean(frac_a_curr_trait)) %>%
+    group_by(nagents, group_w_innovation) %>%
+    summarize(max_success_rate = max(success_rate))
+  print(names(aggdf))
+  # return (aggdf)
+  aggdf <- rename(aggdf, start_group = group_w_innovation) 
+                  # minority_group_size = min_group_frac,
+                  # h_min = min_homophily, h_maj = maj_homophily)
+  # return(aggdf)
+  print(head(aggdf))
+  aggdf$start_group <- factor(aggdf$start_group)#, level=c("Majority", "Minority", "Both"))
+  aggdf$nagents <- factor(aggdf$nagents)
+  print(aggdf)
+  p <- ggplot(aggdf, aes(x = start_group,  #factor(start_group, level=c("Majority", "Minority", "Both")), 
+                         y = max_success_rate)) + 
+    geom_point(aes(color=nagents)) +
+    xlab("Start group") + 
+    ylab("Success rate") + 
+    mytheme
+  
+  # ggsave(write_path, width=6, height=3.75)
+  
+  return (p)
+}
+
 
 success_over_groups_jitter <- function(
     csv_dirs = c("data/main_parts"), 
@@ -63,7 +148,7 @@ success_over_groups_jitter <- function(
     stat_summary(fun=mean, geom="line", color="#02bec3", size=1.5, aes(group=1)) +
     stat_summary(fun=mean, geom="point", shape=23, size=4, fill="#02bec3", stroke=1.1) +
     xlab("Start group") + ylab("Success rate") + 
-      ylim(this_ylim) +
+      # ylim(this_ylim) +
     mytheme
   
   ggsave(write_path, width=6, height=3.75)
@@ -152,7 +237,8 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
 
 main_asymm_heatmaps <- function(csv_dir = "data/main_parts", 
                                 write_dir = "figures/heatmaps/main", 
-                                measure = "sustainability")
+                                measure = "sustainability",
+                                cmap_limits = c(0.0, 0.7))
 {
   
   # for (group_w_innovation in c(1, 2, "Both")) {
@@ -181,7 +267,7 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
     
     asymm_heatmap(tbl, group_w_innovation, 
                   file.path(write_dir, paste0(group_w_innovation, ".pdf")),
-                  measure)
+                  measure, cmap_limits)
   }
 }
 
@@ -261,7 +347,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
   
   for (group_w_innovation in group_w_vals) {
     # nagents sensitivity.
-    for (this_nagents in c(50, 100, 200)) {
+    for (this_nagents in c(50, 2000)) {
       
       this_tbl <- tbl[tbl$nagents == this_nagents, ]
       this_write_dir <- file.path(write_dir, "nagents", this_nagents)
@@ -270,7 +356,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
     }
     # minority group size sensitivity.
-    for (this_min_group_frac in c(0.2, 0.35, 0.5)) {
+    for (this_min_group_frac in c(0.2, 0.35)) { #, 0.5)) {
       
       this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
       this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
@@ -279,7 +365,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
     }
     # f(a) sensitivity.
-    for (this_a_fitness in c(1.05, 1.4, 2.0)) {
+    for (this_a_fitness in c(1.05, 1.4)) { #, 2.0)) {
       
       this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
       this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)

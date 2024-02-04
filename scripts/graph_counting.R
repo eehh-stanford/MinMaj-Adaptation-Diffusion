@@ -101,17 +101,15 @@ plot_over_m <- function(N = c(50, 100, 1000), m = seq(0.05, 0.5, 0.01), kbar = 6
     ylabel <- TeX('$p_{maj \\leftarrow maj}$')
   }
   
-  print(ylabel)
-  
   ggplot(plot_data, aes(x=m, y=prob)) + 
     geom_line(aes(linetype=N, color=homophily), size=1) +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
     xlab("Minority fraction, " ~ italic("m")) + 
     ylab(ylabel) +
-    # ylim(0.0, 0.9) +
+    # ylim(0.0, 1.0) +
     mytheme
   
-  save_path <- file.path(write_dir, paste0("prob_over_m_teacher_group=", teacher_group, ".pdf"))
+  save_path <- file.path(write_dir, paste0("prob_over_m_teacher_group=", teacher_group, "_kbar=", kbar, ".pdf"))
   
   ggsave(save_path, width = 7.5, height = 5.15)
 }
@@ -153,7 +151,7 @@ plot_over_h <- function(N = c(50, 100, 1000), m = 0.05, kbar = 6,
     geom_line(aes(linetype=N, color=ProbType), size=1) +
     scale_color_discrete(labels=c(TeX('$p_{maj \\leftarrow min}$'),TeX('$p_{maj \\leftarrow maj}$'))) + labs(color = "Prob. Type") +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
-    xlab("Majority homophily, " ~ italic("h")) + 
+    xlab(TeX('Majority homophily, $h_{maj}$')) + 
     ylab("Probability") +
     mytheme
   
