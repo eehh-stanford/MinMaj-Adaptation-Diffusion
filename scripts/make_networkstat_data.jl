@@ -1,3 +1,7 @@
+using CSV
+using DataFrames
+using Graphs
+
 include("../src/model.jl")
 
 
@@ -26,11 +30,11 @@ function make_save_one_network(write_dir;
 end
 
 
-function make_save_all_network_data(n_networks = 10,
+function make_save_all_network_data(n_networks = 100,
                                     write_dir = "data/network_stats_base"; 
                                     nagents = 1000,
-                                    min_homophily = [0.5],
-                                    maj_homophily = collect(0.0:0.05:0.9),
+                                    min_homophilies = [0.5],
+                                    maj_homophilies = collect(0.0:0.05:0.9),
                                     mean_degree = 6,
                                     min_group_frac = 0.05,
                                     model_kw_args...
@@ -38,7 +42,7 @@ function make_save_all_network_data(n_networks = 10,
 
     for min_homophily in min_homophilies
         for maj_homophily in maj_homophilies
-            for index in 1:n_networks
+            Threads.@threads for index in 1:n_networks
                 make_save_one_network(write_dir; min_homophily, maj_homophily, 
                                       mean_degree, min_group_frac, index)
             end
