@@ -7,6 +7,7 @@ using ThreadsX
 
 # Set up multiprocessing.
 try
+    print("TRYING TO LOAD")
     num_cores = parse(Int, ENV["SLURM_CPUS_PER_TASK"])
     println("ADDING $num_cores PROCESSORS!")
     addprocs(num_cores, exeflags="--project")
@@ -19,6 +20,7 @@ catch
 end
 
 
+print("MORE SETUP...")
 @everywhere using DrWatson
 @everywhere quickactivate("..")
 @everywhere include("model.jl")
@@ -31,7 +33,7 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
                                          min_group_frac = collect(0.05:0.05:0.5), 
                                          nreplicates=10, group_w_innovation = 1,
                                          allsteps = false, use_network = false,
-                                         mean_degree = 6)
+                                         mean_degree = 6, maxstep = 1000)
 
     rep_idx = collect(1:nreplicates)
 
@@ -65,10 +67,14 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
     function stopfn_fixated(model, step)
         agents = allagents(model) 
 
-        return (
+        fixated = (
             all(agent.curr_trait == a for agent in agents) || 
             all(agent.curr_trait == A for agent in agents)
         )
+
+        maxed = step == maxstep
+
+        return fixated || maxed
     end
 
     # For now ignore non-extremal time steps.
