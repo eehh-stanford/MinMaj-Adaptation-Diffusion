@@ -163,18 +163,23 @@ function init_network!(model)
 
     # Add a random 'learns-from' tie for each agent in minority group to another
     # in-group member to ensure fully-connected populations.
-    for min_id in minority_ids
-        possible_teacher_ids = filter(id -> id ≠ min_id, minority_ids)
-        selected_teacher = sample(possible_teacher_ids)
-        # @assert add_edge!(network, min_id, selected_teacher)
-        successful_add = false
-        while !successful_add
-            successful_add = add_edge!(network, min_id, selected_teacher)
-        end
-    end
+
+    ### XXX HERE IS PREVIOUS MIN ID INITIALIZATION
+    # for min_id in minority_ids
+    #     possible_teacher_ids = filter(id -> id ≠ min_id, minority_ids)
+    #     selected_teacher = sample(possible_teacher_ids)
+    #     # @assert add_edge!(network, min_id, selected_teacher)
+    #     successful_add = false
+    #     while !successful_add
+    #         successful_add = add_edge!(network, min_id, selected_teacher)
+    #     end
+    # end
+
     # Add the remaining in-minority-group ties.
-    remaining_min_ingroup = E_min_ingroup - length(minority_ids)
-    for _ in 1:remaining_min_ingroup
+    # remaining_min_ingroup = E_min_ingroup - length(minority_ids)
+
+    # for _ in 1:remaining_min_ingroup
+    for _ in 1:E_min_ingroup
 
         # Generate a new edge that may already exist in social network.
         new_edge = (sample(minority_ids), sample(minority_ids)) 
@@ -192,21 +197,24 @@ function init_network!(model)
 
     # Add a random 'learns-from' tie for each agent in majority group to another
     # in-group member to ensure fully-connected populations.
-    for maj_id in majority_ids
-        possible_teacher_ids = filter(idx -> idx ≠ maj_id, majority_ids)
-        selected_teacher = sample(possible_teacher_ids)
-        # add_edge!(network, maj_id, selected_teacher)
 
-        successful_add = false
-        while !successful_add
-            successful_add = add_edge!(network, maj_id, selected_teacher)
-        end
-    end
+    ### XXX HERE IS MAJ ID INITIALIZATION
+    # for maj_id in majority_ids
+    #     possible_teacher_ids = filter(idx -> idx ≠ maj_id, majority_ids)
+    #     selected_teacher = sample(possible_teacher_ids)
+    #     # add_edge!(network, maj_id, selected_teacher)
+
+    #     successful_add = false
+    #     while !successful_add
+    #         successful_add = add_edge!(network, maj_id, selected_teacher)
+    #     end
+    # end
 
     # Add the remaining in-majority-group ties.
     remaining_maj_ingroup = E_maj_ingroup - length(majority_ids)
 
-    for _ in 1:remaining_maj_ingroup
+    # for _ in 1:remaining_maj_ingroup
+    for _ in 1:E_maj_ingroup
 
         # Generate a new edge that may already exist in social network.
         new_edge = (sample(majority_ids), sample(majority_ids)) 
@@ -279,15 +287,25 @@ function select_teacher(focal_agent, model, group = 0)
                    collect(allagents(model)))
     end
 
-    teacher_weights = 
-        map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-            prospective_teachers)
-
-    # Renormalize weights.
-    denom = Float64(sum(teacher_weights))
-    teacher_weights ./= denom
+    denom = 0.0
 
     # Select teacher.
-    return sample(prospective_teachers, Weights(teacher_weights))
+    ret = nothing
+    if isempty(prospective_teachers)
+        ret = focal_agent
+    else
+        teacher_weights = 
+            map(agent -> model.trait_fitness_dict[agent.curr_trait], 
+                prospective_teachers)
+
+        # Normalize weights.
+        denom = Float64(sum(teacher_weights))
+        teacher_weights ./= denom
+
+        ret = sample(prospective_teachers, Weights(teacher_weights))
+    end
+
+    return ret
 end
+
 
