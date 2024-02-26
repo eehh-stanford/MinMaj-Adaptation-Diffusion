@@ -62,7 +62,6 @@ end
         @test sample_group(m[3], m) == 2
         @test sample_group(m[4], m) == 2
 
-        # m = adaptation_diffusion_model(4; min_group_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
         m = adaptation_diffusion_model(4; min_group_frac = 0.25, min_homophily = 0.0, maj_homophily = 0.0, 
                          a_fitness = 1e9)
         
@@ -77,9 +76,11 @@ end
     end
 
     # Confirm groups are initialized as expected and that teacher selection 
-    # works as expected for asymmetric, non-zero homophily. 
+    # works as expected for asymmetric, non-zero homophily. Note self-learning
+    # is set to zero.
     m = adaptation_diffusion_model(4; min_group_frac = 0.5, min_homophily = 0.75, 
-                     maj_homophily = 0.25, a_fitness = 1e2)
+                     maj_homophily = 0.25, a_fitness = 1e2, 
+                     self_learning_coeff = 0.0)
 
     agents = collect(allagents(m))
 
@@ -150,7 +151,7 @@ end
                   )
     end
 
-    @testset "Asymmetric homophily produces correct teacher selection stats, non-networked (Agent $ii)" for ii in 1:4
+    @testset "Asymmetric homophily produces correct teacher selection stats, non-networked, no self-learning (Agent $ii)" for ii in 1:4
 
         teachers_selected = [
             select_teacher(m[ii], m, sample_group(m[ii], m))
@@ -158,6 +159,8 @@ end
         ]
 
         @test ii ∉ map(a -> a.id, teachers_selected)
+
+        deleteat!(teachers_selected, findall(a -> a == ii, teachers_selected)) 
 
         # Contants below multiplying ntrials calculated
         # from homophily values given above.
@@ -191,7 +194,7 @@ end
                                            use_network = true,
                                            a_fitness = 1e6,
                                            A_fitness = 0.1,
-                                           mean_degree = 9.0
+                                           mean_degree = 20.0
                                           )
 
         _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)
@@ -205,7 +208,7 @@ end
                                            use_network = true,
                                            a_fitness = 1e6,
                                            A_fitness = 0.1,
-                                           mean_degree = 9.0
+                                           mean_degree = 20.0
                                           )
 
         _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)
@@ -219,7 +222,7 @@ end
                                            use_network = true,
                                            a_fitness = 1e6,
                                            A_fitness = 0.1,
-                                           mean_degree = 9.0
+                                           mean_degree = 20.0
                                           )
 
         _, _ = run!(model, agent_step!, model_step!, stopfn_fixated)

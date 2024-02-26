@@ -3,7 +3,6 @@ using DrWatson: @dict
 using Graphs: SimpleDiGraph, add_edge!, has_edge, is_weakly_connected
 using StatsBase
 
-
 @enum Trait a A
 
 
@@ -50,6 +49,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
                                     min_homophily = 1.0, maj_homophily = 1.0, 
                                     rep_idx = nothing, use_network = false, 
                                     mean_degree = 3,
+                                    self_learning_coeff = 1.0,
                                     model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
@@ -61,7 +61,7 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
         end
     end
 
-    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents use_network mean_degree
+    properties = @dict trait_fitness_dict ngroups a_fitness min_homophily maj_homophily min_group_frac rep_idx nagents use_network mean_degree self_learning_coeff
 
     merge!(properties, model_parameters)
 
@@ -298,6 +298,11 @@ function select_teacher(focal_agent, model, group = 0)
             map(agent -> model.trait_fitness_dict[agent.curr_trait], 
                 prospective_teachers)
 
+        push!(prospective_teachers, focal_agent)
+        push!(teacher_weights, 
+              model.self_learning_coeff * 
+                model.trait_fitness_dict[focal_agent.curr_trait])
+
         # Normalize weights.
         denom = Float64(sum(teacher_weights))
         teacher_weights ./= denom
@@ -307,5 +312,4 @@ function select_teacher(focal_agent, model, group = 0)
 
     return ret
 end
-
 

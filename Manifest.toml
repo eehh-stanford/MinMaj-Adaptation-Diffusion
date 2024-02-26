@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "c5f27ced89615e4793660fcf1d8b7cc1655ce598"
+project_hash = "727a69dae291837880a6fc140506eb32d5701340"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -290,6 +290,12 @@ version = "1.0.0"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
+[[deps.Debugger]]
+deps = ["CodeTracking", "Crayons", "Highlights", "InteractiveUtils", "JuliaInterpreter", "Markdown", "REPL"]
+git-tree-sha1 = "6798d210d8277b96cee6a6af387ed249b6e744ab"
+uuid = "31a5f54b-26ea-5ae9-a837-f05ce5417438"
+version = "0.7.8"
+
 [[deps.DefineSingletons]]
 git-tree-sha1 = "0fba8b706d0178b4dc7fd44a96a92382c9065c2c"
 uuid = "244e2a9f-e319-4986-a169-4d1fe445cd52"
@@ -475,6 +481,12 @@ deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapp
 git-tree-sha1 = "5eab648309e2e060198b45820af1a37182de3cce"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 version = "1.10.0"
+
+[[deps.Highlights]]
+deps = ["DocStringExtensions", "InteractiveUtils", "REPL"]
+git-tree-sha1 = "0341077e8a6b9fc1c2ea5edc1e93a956d2aec0c7"
+uuid = "eafb193a-b7ab-5a9e-9068-77385905fa72"
+version = "0.5.2"
 
 [[deps.HypergeometricFunctions]]
 deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
