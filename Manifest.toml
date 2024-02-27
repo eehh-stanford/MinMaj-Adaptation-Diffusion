@@ -261,6 +261,12 @@ git-tree-sha1 = "abbbb9ec3afd783a7cbd82ef01dcd088ea051398"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 version = "1.10.1"
 
+[[deps.Highlights]]
+deps = ["DocStringExtensions", "InteractiveUtils", "REPL"]
+git-tree-sha1 = "0341077e8a6b9fc1c2ea5edc1e93a956d2aec0c7"
+uuid = "eafb193a-b7ab-5a9e-9068-77385905fa72"
+version = "0.5.2"
+
 [[deps.HypergeometricFunctions]]
 deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
 git-tree-sha1 = "f218fe3736ddf977e0e772bc9a586b2383da2685"
@@ -307,6 +313,12 @@ version = "0.2.2"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.IteratorSampling]]
+deps = ["Distributions", "Random", "ResumableFunctions", "StatsBase"]
+git-tree-sha1 = "e0ba921254add1345158c50f66f43ae1a012c0f3"
+uuid = "ef79a3d2-ae9f-5cd2-ab61-e13847810a6e"
+version = "0.2.3"
 
 [[deps.JLD2]]
 deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "PrecompileTools", "Printf", "Reexport", "Requires", "TranscodingStreams", "UUIDs"]
@@ -597,6 +609,12 @@ deps = ["UUIDs"]
 git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
+
+[[deps.ResumableFunctions]]
+deps = ["MacroTools"]
+git-tree-sha1 = "f1401aa4cbfcdeee688d971a6aabdb65a98dae05"
+uuid = "c5292f4c-5179-55e1-98c5-05642aab7184"
+version = "0.6.8"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]

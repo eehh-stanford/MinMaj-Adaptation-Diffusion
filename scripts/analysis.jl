@@ -377,9 +377,9 @@ function network_percolation_animation(nagents = 15;
 
     # Initialize and run model.
     model = adaptation_diffusion_model(nagents; 
-                                   use_network, mean_degree, min_group_frac,
-                                   min_homophily, maj_homophily, group_w_innovation,
-                                   model_kw_args...)
+                                       use_network, mean_degree, min_group_frac,
+                                       min_homophily, maj_homophily, 
+                                       group_w_innovation, model_kw_args...)
 
     adata = [:group, :curr_trait]
 

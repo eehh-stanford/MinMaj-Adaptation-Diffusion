@@ -3,6 +3,7 @@ library(data.table)
 library(purrrlyr)
 library(reshape2)
 library(scales)
+library(latex2exp)
 
 
 mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
@@ -79,7 +80,7 @@ probability_node_is_teacher <- function(metapop_size, minority_fraction, mean_de
   return (1 - (numerator / denominator))
 }
 
-plot_over_m <- function(N = c(30, 100, 10000), m = seq(0.05, 0.5, 0.01), kbar = 6, 
+plot_over_m <- function(N = c(50, 100, 1000), m = seq(0.05, 0.5, 0.01), kbar = 6, 
                         homophily = c(0.0, 0.25, 0.5, 0.75, 0.9), teacher_group = "minority", 
                         learner_group = "majority", write_dir = "new_prob_figs") {
   
@@ -94,21 +95,27 @@ plot_over_m <- function(N = c(30, 100, 10000), m = seq(0.05, 0.5, 0.01), kbar = 
   plot_data$N <- as.factor(plot_data$N)
   plot_data$homophily <- as.factor(plot_data$homophily)
   
+  if (teacher_group == "minority") {
+    ylabel <- TeX('$p_{maj \\leftarrow min}$')
+  } else {
+    ylabel <- TeX('$p_{maj \\leftarrow maj}$')
+  }
+  
   ggplot(plot_data, aes(x=m, y=prob)) + 
     geom_line(aes(linetype=N, color=homophily), size=1) +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
     xlab("Minority fraction, " ~ italic("m")) + 
-    ylab(paste0("Prob. that ", substring(teacher_group, 1, 3), ". teaches maj.")) +
-    # ylim(0.0, 0.9) +
+    ylab(ylabel) +
+    # ylim(0.0, 1.0) +
     mytheme
   
-  save_path <- file.path(write_dir, paste0("prob_over_m_teacher_group=", teacher_group, ".pdf"))
+  save_path <- file.path(write_dir, paste0("prob_over_m_teacher_group=", teacher_group, "_kbar=", kbar, ".pdf"))
   
   ggsave(save_path, width = 7.5, height = 5.15)
 }
 
 
-plot_over_h <- function(N = c(30, 100, 10000), m = 0.05, kbar = 6, 
+plot_over_h <- function(N = c(50, 100, 1000), m = 0.05, kbar = 6, 
                                homophily = seq(0.0, 0.90, 0.01), example_optimal_h = 0.75,
                                write_dir = "new_prob_figs"){
   
@@ -116,16 +123,16 @@ plot_over_h <- function(N = c(30, 100, 10000), m = 0.05, kbar = 6,
   plot_data <-
     # ...first create Cartesian product ("cross join") of parameters,...
     CJ(N, m, kbar, homophily) %>%
-    # ...then calculate probability a given minority node teaches at least one majority agent...
-    by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily, 
-                                                    teacher_group = "minority"),
-           .to = "pminmaj", .collate = "cols") %>%
-    # ...then calculate probability a given majority node teaches at least one majority agent...
-    by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily,
-                                                    teacher_group = "majority"),
-           .to = "pmajmaj", .collate = "cols") %>%
-    # ...finally melt columns...
-    melt(variable.name = "ProbType", measure=c("pminmaj", "pmajmaj"))
+      # ...then calculate probability a given minority node teaches at least one majority agent...
+      by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily, 
+                                                      teacher_group = "minority"),
+             .to = "pminmaj", .collate = "cols") %>%
+      # ...then calculate probability a given majority node teaches at least one majority agent...
+      by_row(function (r) probability_node_is_teacher(r$N, r$m, r$kbar, r$homophily,
+                                                      teacher_group = "majority"),
+             .to = "pmajmaj", .collate = "cols") %>%
+      # ...finally melt columns...
+      melt(variable.name = "ProbType", measure=c("pminmaj", "pmajmaj"))
   
   plot_data$N <- as.factor(plot_data$N)
   # plot_data$homophily <- as.factor(plot_data$homophily)
@@ -142,8 +149,9 @@ plot_over_h <- function(N = c(30, 100, 10000), m = 0.05, kbar = 6,
     geom_hline(yintercept = prob_maj_optimal, linetype="dashed", color=c2) +
     geom_hline(yintercept = prob_min_optimal, linetype="dashed", color=c1) +
     geom_line(aes(linetype=N, color=ProbType), size=1) +
+    scale_color_discrete(labels=c(TeX('$p_{maj \\leftarrow min}$'),TeX('$p_{maj \\leftarrow maj}$'))) + labs(color = "Prob. Type") +
     scale_linetype_manual(values=c("twodash", "dashed", "solid")) +
-    xlab("Majority homophily, " ~ italic("h")) + 
+    xlab(TeX('Majority homophily, $h_{maj}$')) + 
     ylab("Probability") +
     mytheme
   
