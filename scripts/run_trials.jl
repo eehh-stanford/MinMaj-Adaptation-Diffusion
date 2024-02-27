@@ -19,6 +19,26 @@ include("../src/experiment.jl")
 
 s = ArgParseSettings()
 
+function vecparse(T, s::AbstractString)
+
+    if occursin(":", s)
+        vals = split(s, ":")
+        parseT(x) = parse(T, x)
+
+        return parseT(vals[1]):parseT(vals[2]):parseT(vals[3])
+        
+    else
+        s = replace(s, "[" => "")
+        s = replace(s, "]" => "")
+
+        return [parse(T, el) for el in split(s, ",")]
+    end
+end
+
+# Define functions to parse vectors of floats...
+function ArgParse.parse_item(::Type{Vector{Float64}}, s::AbstractString)
+    vecparse(Float64, s) 
+end
 
 function parse_cli()
 
@@ -61,6 +81,11 @@ function parse_cli()
             help = "Mean degree of random network"
             default = 6
             arg_type = Int
+
+        "--homophily"
+            help = "Minority and majority homophily levels; experiment run over Cartesian product"
+            default = [collect(0.0:0.05:0.95)..., 0.99]
+            arg_type = Vector{Float}
     end
 
     return parse_args(s)

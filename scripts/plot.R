@@ -238,7 +238,7 @@ steps_over_groups_success_failure <- function(csv_dirs = c("data/main_parts"),
 main_asymm_heatmaps <- function(csv_dir = "data/main_parts", 
                                 write_dir = "figures/heatmaps/main", 
                                 measure = "sustainability",
-                                cmap_limits = c(0.0, 0.7))
+                                cmap_limits = c(0.0, 0.8))
 {
   
   # for (group_w_innovation in c(1, 2, "Both")) {
