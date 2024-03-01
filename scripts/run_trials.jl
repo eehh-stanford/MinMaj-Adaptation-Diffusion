@@ -92,7 +92,6 @@ function parse_cli()
 end
 
 
-
 function run_trials(nreplicates = 20; 
                     outputfilename = "trials_output.jld2", 
                     experiment_kwargs...)

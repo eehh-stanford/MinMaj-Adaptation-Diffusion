@@ -7,7 +7,7 @@ require(reshape2)
 require(stringr)
 
 
-mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
+mytheme <- theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 text = element_text(size=22),# family = 'PT Sans'),
                 legend.key.width = unit(2, 'cm'),
                 legend.key.size = unit(1.5, 'lines'),
@@ -269,6 +269,8 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
                   file.path(write_dir, paste0(group_w_innovation, ".pdf")),
                   measure, cmap_limits)
   }
+  
+  return (tbl)
 }
 
 
@@ -546,3 +548,20 @@ supp_mean_plots <- function(csv_dir = "data/supp_parts",
                                       this_ylim = steps_ylim)
   }
 }
+
+
+plot_extreme_success_rates <- function(results_tbl) {
+  
+  results_tbl %>%
+    # filter(group_w_innovation != 2) %>%
+    group_by(group_w_innovation, min_homophily, maj_homophily) %>%
+    summarize(success_rate = mean(frac_a_curr_trait)) %>%
+    group_by(group_w_innovation, min_homophily) %>%
+    summarize(min_success = min(success_rate), max_success = max(success_rate)) %>%
+    pivot_longer(cols = c(min_success, max_success), names_to = "variable", values_to = "value") %>%
+    ggplot(aes(x=min_homophily, linetype=variable, y = value, color = group_w_innovation)) +
+      geom_line() + ylim(c(0, 0.8)) + mytheme
+    
+}
+
+
