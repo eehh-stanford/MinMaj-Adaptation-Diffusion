@@ -6,6 +6,10 @@ require(purrr)
 require(reshape2)
 require(stringr)
 
+require(igraph)
+require(DirectedClustering)
+
+source("scripts/percolation_vis.R")
 
 mytheme <- theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 text = element_text(size=22),# family = 'PT Sans'),
@@ -456,8 +460,6 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
          y = TeX("Majority group homophily, $h_{maj}$")) +
     coord_fixed() + labs(fill = measure_label) +
     mytheme
-    
-  # save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
   
   ggsave(write_path, width = 6.75, height = 5)
 }
@@ -550,18 +552,66 @@ supp_mean_plots <- function(csv_dir = "data/supp_parts",
 }
 
 
-plot_extreme_success_rates <- function(results_tbl) {
+plot_extreme_success_rates <- function(results_tbl, write_path = "../Writing/minmajnet/Figures/extreme_success_rates.pdf") {
   
-  results_tbl %>%
-    # filter(group_w_innovation != 2) %>%
+  p <- results_tbl %>%
+    # Process results table for summarizing and plotting over h_min.
     group_by(group_w_innovation, min_homophily, maj_homophily) %>%
     summarize(success_rate = mean(frac_a_curr_trait)) %>%
     group_by(group_w_innovation, min_homophily) %>%
     summarize(min_success = min(success_rate), max_success = max(success_rate)) %>%
     pivot_longer(cols = c(min_success, max_success), names_to = "variable", values_to = "value") %>%
+    # Plot.
     ggplot(aes(x=min_homophily, linetype=variable, y = value, color = group_w_innovation)) +
-      geom_line() + ylim(c(0, 0.8)) + mytheme
+      geom_line(size=2) + xlab(TeX('Minority homophily, $h_{min}$')) +  ylab("Success rate") + ylim(c(0, 0.8)) + 
+      scale_color_manual(name = "Start group", values = c("#AA00AA", "#BBBBFF", "#00AAAA")) + 
+      scale_linetype_discrete(name = "Type", labels = c("Max", "Min")) + mytheme
+  
+  ggsave(write_path, width=8, height=4.5)
     
+  return (p)
 }
 
 
+success_reciprocity <- function(results_tbl, adj_mat_dir, write_path = "../Writing/minmajnet/Figures/extreme_success_rates.pdf") {
+  
+  success_over_hmaj <- results_tbl %>%
+    group_by(group_w_)
+    
+}
+
+calculate_reciprocity <- function(adj_mat_dir, hmin = 0.0, sync_file = "data/reciprocity.csv", lim = 0) {
+  
+  if (!is_null(sync_file)) {
+    if (file.exists(sync_file)) {
+      return (read_csv(sync_file))
+    }
+  }
+  
+  files <- Sys.glob(file.path(adj_mat_dir, paste0("adjacency_hmin=", format(hmin, nsmall=1), "*.csv")))
+  if (lim > 0) {
+    files <- files[1:lim]
+  }
+  nfiles <- length(files)
+  hmin <- rep(hmin, nfiles)
+  # hmaj <- as.numeric( str_split( str_split(str_extract(files, "hmaj=.*"), "=")[[1]][2], "_")[[1]][1] )
+  
+  hmaj <- rep(0.0, nfiles)
+  clustering <- rep(0.0, nfiles)
+  reciprocity_vec <- rep(0.0, nfiles)
+  
+  for (f_idx in 1:nfiles) {
+    # print(paste0("On file index ", f_idx))
+    print(files[f_idx])
+    adjacency_matrix <- load_adjacency(files[f_idx])
+    hmaj[f_idx] <- as.numeric( str_split( str_split(str_extract(files[f_idx], "hmaj=.*"), "=")[[1]][2], "_")[[1]][1] )
+    
+    clustering[f_idx] <- ClustBCG(adjacency_matrix, type="directed")$GlobaltotalCC
+    
+    network <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed")
+    reciprocity_vec[f_idx] <- reciprocity(network)
+  }
+  
+  return (tibble(hmin, hmaj, clustering, reciprocity = reciprocity_vec))
+  # return (tibble(hmin, hmaj, reciprocity = reciprocity_vec))
+}

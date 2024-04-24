@@ -70,7 +70,8 @@ function adaptation_diffusion_model(nagents = 100; min_group_frac = 1.0,
         merge!(properties, Dict(:network => network))
     end
 
-    model = ABM(Person, scheduler = Schedulers.fastest; properties)
+    # model = ABM(Person, scheduler = Schedulers.fastest; properties)
+    model = ABM(Person; properties)
     flcutoff = floor(min_group_frac * nagents)
     min_group_cutoff = Int(flcutoff)
     

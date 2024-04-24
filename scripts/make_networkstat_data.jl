@@ -33,16 +33,17 @@ end
 function make_save_all_network_data(n_networks = 100,
                                     write_dir = "data/network_stats_base"; 
                                     nagents = 1000,
-                                    min_homophilies = [0.5],
+                                    min_homophilies = [0.0],
                                     maj_homophilies = collect(0.0:0.05:0.9),
                                     mean_degree = 6,
                                     min_group_frac = 0.05,
+                                    index_start = 1,
                                     model_kw_args...
                                    )
 
     for min_homophily in min_homophilies
         for maj_homophily in maj_homophilies
-            Threads.@threads for index in 1:n_networks
+            Threads.@threads for index in index_start:(index_start + n_networks)
                 make_save_one_network(write_dir; min_homophily, maj_homophily, 
                                       mean_degree, min_group_frac, index)
             end
