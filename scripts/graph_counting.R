@@ -1,9 +1,11 @@
 library(ggplot2)
 library(data.table)
 library(purrrlyr)
-library(reshape2)
+# library(reshape2)
 library(scales)
 library(latex2exp)
+
+library(tidyr)
 
 
 mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),

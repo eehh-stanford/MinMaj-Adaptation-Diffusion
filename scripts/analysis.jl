@@ -253,7 +253,11 @@ function make_all_group_prevalence_comparisons(nagents = 1000; ntrials = 10,
             #  (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
         csv_write_dir = joinpath("data", "group_prevalence"),
         base_pdf_write_dir = 
-            joinpath("..", "Writing", "SustainableCBA_Paper", "Figures", "series")
+            # Locally, not in repo, I have a link to my paper directory; customize
+            # this to have the series plots go to a different directory.
+            # Also expects there to be subdirectories "1", "2", and "Both"
+            joinpath("paper", "Figures", 
+                     "final_network", "series")
     )
 
     R"""
@@ -312,8 +316,7 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
     models = [adaptation_diffusion_model(nagents; model_kwargs...) 
               for _ in 1:ntrials]
 
-    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated; 
-                            adata, mdata)
+    adf, mdf = ensemblerun!(models, stopfn_fixated; adata, mdata)
 
     rename!(adf, [:step, :frac_a, :frac_a_min, :frac_a_max, :ensemble])
     

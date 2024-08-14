@@ -72,10 +72,12 @@ function adaptation_diffusion_experiment(nagents=100; a_fitness = 2.0,
     end
 
     # For now ignore non-extremal time steps.
-    when(model, step) = stopfn_fixated(model, step)
+    function when(model, step) 
+        return stopfn_fixated(model, step)
+    end
 
     println("Starting ensemblerun...")
-    adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated;
+    adf, mdf = ensemblerun!(models, stopfn_fixated;
                             adata, mdata, when, parallel = true, 
                             showprogress = true)
     
