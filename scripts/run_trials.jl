@@ -35,10 +35,12 @@ function vecparse(T, s::AbstractString)
     end
 end
 
+
 # Define functions to parse vectors of floats...
 function ArgParse.parse_item(::Type{Vector{Float64}}, s::AbstractString)
     vecparse(Float64, s) 
 end
+
 
 function parse_cli()
 
@@ -85,7 +87,7 @@ function parse_cli()
         "--homophily"
             help = "Minority and majority homophily levels; experiment run over Cartesian product"
             default = [collect(0.0:0.05:0.95)..., 0.99]
-            arg_type = Vector{Float}
+            arg_type = Vector{Float64}
     end
 
     return parse_args(s)
@@ -126,6 +128,10 @@ function main()
 
     datadirname = pop!(parsed_args, "datadirname")
     nameargs = copy(parsed_args)
+    
+    # I have been identifying homophily range using the datadirname,
+    # which includes the word "neghomophily".
+    pop!(nameargs, "homophily")
 
     outputfilename = joinpath("data", datadirname, savename(nameargs, "csv"))
 
