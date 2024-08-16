@@ -34,12 +34,12 @@ run_k() {
   
 # }
 
-mean_degree=10
-run_k $mean_degree
-mean_degree=30
-run_k $mean_degree
-mean_degree=50
-run_k $mean_degree
+# mean_degree=10
+# run_k $mean_degree
+# mean_degree=30
+# run_k $mean_degree
+# mean_degree=50
+# run_k $mean_degree
 
 
 run_N() {
@@ -55,8 +55,8 @@ N=50
 run_N $N
 N=100
 run_N $N
-N=2000
-run_N $N
+# N=2000
+# run_N $N
 
 run_minfrac() {
   minfrac=$1
@@ -68,7 +68,7 @@ run_minfrac() {
 
 }
 
-minfrac=0.2
-run_minfrac $minfrac
-minfrac=0.4
-run_minfrac $minfrac
+# minfrac=0.2
+# run_minfrac $minfrac
+# minfrac=0.4
+# run_minfrac $minfrac

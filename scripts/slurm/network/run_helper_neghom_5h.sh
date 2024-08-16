@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=24
 #SBATCH --mem-per-cpu=10G
-#SBATCH --time=0:30:00
+#SBATCH --time=5:00:00
 #SBATCH --output=Supp_Network_MinMaj.out
 #SBATCH --partition=serc,normal
 
