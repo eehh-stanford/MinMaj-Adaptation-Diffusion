@@ -255,7 +255,7 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
 
 
 load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
-                            sync_file = NULL) {
+                            sync_file = NULL, col_select = NULL) {
   
   group_w_vals <- c("1", "2", "Both")
   
@@ -282,7 +282,7 @@ load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
     }
     
     tbl_part <- files %>%
-      map_df(~read_csv(., show_col_types = FALSE))
+      map_df(~read_csv(., col_select=col_select, show_col_types = FALSE))
     
     tbl_part$group_w_innovation = group_w_innovation
     
@@ -304,59 +304,112 @@ load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
 }
 
 
-select_supp_rows <- function(supp_vars=c(""), values)
 
-
-
-supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
+supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", 
+                                tbl = NULL,
+                                write_dir = "figures/supp",
+                                do_nagents = TRUE,
+                                do_mean_degree = TRUE,
+                                do_min_group_frac = TRUE,
+                                col_select = c("nagents", "mean_degree", "min_group_frac",
+                                               "min_homophily", "maj_homophily", 
+                                               "frac_a_curr_trait", "step")) {
+  
+  
+  if (is_null(tbl)) {
+    tbl <- load_from_parts(csv_dir, "data/supp_asymm_heatmaps.tmp.csv", col_select) 
+  }
 
   group_w_vals <- c("1", "2", "Both")
   
-  for (group_w_innovation in group_w_vals) {
-    
-    files <- list.files(csv_dir, 
-                        pattern = paste0("group_w_innovation=", group_w_innovation),
-                        full.names = TRUE)
+  for (this_group_w_innovation in group_w_vals) {
 
-    tbl_part <- files %>%
-      map_df(~read_csv(., show_col_types = FALSE))
-    
-    tbl_part$group_w_innovation = group_w_innovation
-    
-    if (group_w_innovation == "1") {
-      tbl <- tbl_part
-    }
-    else {
-      tbl <- rbind(tbl, tbl_part)
-    }
-  }
-  
-  
-  
-  for (group_w_innovation in group_w_vals) {
     # nagents sensitivity.
-    for (this_nagents in c(50, 100, 2000)) {
-      
-      this_tbl <- tbl[tbl$nagents == this_nagents, ]
-      if (this_nagents == 50) {
-        mean_degree = 5
-        min_group_frac = 0.25
-      } else if (this_nagents == 100) {
-        mean_degree = 10
-        min_group_frac = 0.2
-      } else {
-        mean_degree = 20
-        min_group_frac = 0.05
+    if (do_nagents) {
+      for (this_nagents in c(50, 100, 2000)) {
+        
+        if (this_nagents == 50) {
+          this_mean_degree = 5
+          this_min_group_frac = 0.25
+          cmap_limits = c(0.0, 0.6)
+        } else if (this_nagents == 100) {
+          this_mean_degree = 10
+          this_min_group_frac = 0.2
+          cmap_limits = c(0.0, 0.6)
+        } else {
+          this_mean_degree = 20
+          this_min_group_frac = 0.05
+          cmap_limits = c(0.0, 0.9)
+        }
+        
+        this_tbl <- tbl %>%
+          filter(group_w_innovation == this_group_w_innovation &
+                 nagents == this_nagents &
+                 mean_degree == this_mean_degree &
+                 min_group_frac == this_min_group_frac)
+        
+        this_write_dir <- file.path(write_dir, "nagents", this_nagents)
+        if (!dir.exists(this_write_dir)) { 
+          dir.create(this_write_dir, recursive=TRUE)
+        }
+
+        write_path <- file.path(this_write_dir, paste0(this_group_w_innovation, ".pdf"))
+        
+        asymm_heatmap(this_tbl, this_group_w_innovation, write_path, 
+                      cmap_limits = cmap_limits)
       }
-      
-      this_tbl <- tbl %>% 
-      
-      return (sel_tbl)
-      this_write_dir <- file.path(write_dir, "nagents", this_nagents)
-      
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      
-      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
+    }
+
+    # mean_degree sensitivity.
+    if (do_mean_degree) {
+      for (this_mean_degree in c(10, 30, 50)) {
+        this_min_group_frac = 0.05
+        this_nagents = 1000
+        cmap_limits = c(0.0, 0.8)
+        
+        this_tbl <- tbl %>%
+          filter(group_w_innovation == this_group_w_innovation &
+                 nagents == this_nagents &
+                 mean_degree == this_mean_degree &
+                 min_group_frac == this_min_group_frac)
+
+        this_write_dir <- file.path(write_dir, "mean_degree", this_mean_degree)
+        if (!dir.exists(this_write_dir)) { 
+          dir.create(this_write_dir, recursive=TRUE)
+        }
+
+        write_path <- file.path(this_write_dir, paste0(this_group_w_innovation, ".pdf"))
+        
+        asymm_heatmap(this_tbl, this_group_w_innovation, write_path, 
+                      cmap_limits = cmap_limits)
+
+      }
+    }
+
+    # min_group_frac 
+    if (do_min_group_frac) {
+      for (this_min_group_frac in c(0.2, 0.4)) {
+        this_nagents = 1000
+        this_mean_degree = 20
+        cmap_limits = c(0.0, 0.65)
+        
+        this_tbl <- tbl %>%
+          filter(group_w_innovation == this_group_w_innovation &
+                 nagents == this_nagents &
+                 mean_degree == this_mean_degree &
+                 min_group_frac == this_min_group_frac)
+
+        this_write_dir <- file.path(write_dir, "min_group_frac", this_min_group_frac)
+        if (!dir.exists(this_write_dir)) { 
+          dir.create(this_write_dir, recursive=TRUE)
+        }
+
+        write_path <- file.path(this_write_dir, paste0(this_group_w_innovation, ".pdf"))
+        
+        asymm_heatmap(this_tbl, this_group_w_innovation, write_path, 
+                      cmap_limits = cmap_limits)
+
+      }
     }
   }
     # minority group size sensitivity.
@@ -382,6 +435,7 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
     #   #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
     #   # }
     
+  return (tbl)
 }
 
 
@@ -435,7 +489,6 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
   if (measure == "sustainability") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = min_homophily, y = maj_homophily, fill = sustainability))
     measure_label <- "Success\nrate"
-    # cmap_limits <- c(0.0, 1.0)
   } else if (measure == "step") {
     ggplotstart <- ggplot(asymm_lim_agg, aes(x = min_homophily, y = maj_homophily, fill = step))
     measure_label <- "Mean\nsteps"
