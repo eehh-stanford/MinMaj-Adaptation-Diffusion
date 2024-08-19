@@ -6,12 +6,8 @@ require(purrr)
 require(reshape2)
 require(stringr)
 
-require(igraph)
-require(DirectedClustering)
 
-source("scripts/percolation_vis.R")
-
-mytheme <- theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
+mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 text = element_text(size=22),# family = 'PT Sans'),
                 legend.key.width = unit(2, 'cm'),
                 legend.key.size = unit(1.5, 'lines'),
@@ -273,8 +269,6 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
                   file.path(write_dir, paste0(group_w_innovation, ".pdf")),
                   measure, cmap_limits)
   }
-  
-  return (tbl)
 }
 
 
@@ -328,6 +322,10 @@ load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
 }
 
 
+select_supp_rows <- function(supp_vars=c(""), values)
+
+
+
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
 
   group_w_vals <- c("1", "2", "Both")
@@ -351,44 +349,59 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
     }
   }
   
+  
+  
   for (group_w_innovation in group_w_vals) {
     # nagents sensitivity.
-    for (this_nagents in c(50, 2000)) {
+    for (this_nagents in c(50, 100, 2000)) {
       
       this_tbl <- tbl[tbl$nagents == this_nagents, ]
+      if (this_nagents == 50) {
+        mean_degree = 5
+        min_group_frac = 0.25
+      } else if (this_nagents == 100) {
+        mean_degree = 10
+        min_group_frac = 0.2
+      } else {
+        mean_degree = 20
+        min_group_frac = 0.05
+      }
+      
+      this_tbl <- tbl %>% 
+      
+      return (sel_tbl)
       this_write_dir <- file.path(write_dir, "nagents", this_nagents)
+      
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
       
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
-    }
-    # minority group size sensitivity.
-    for (this_min_group_frac in c(0.2, 0.35)) { #, 0.5)) {
-      
-      this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
-      this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      
-      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
-    }
-    # f(a) sensitivity.
-    for (this_a_fitness in c(1.05, 1.4)) { #, 2.0)) {
-      
-      this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
-      this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # if (this_a_fitness %in% c(1.4, 2.0)) {
-        # asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # }
-      # else {
-      #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # }
     }
   }
-
-  
-  # 
+    # minority group size sensitivity.
+    # for (this_min_group_frac in c(0.2, 0.4)) { #, 0.5)) {
+    #   
+    #   this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
+    #   this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
+    #   write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+    #   
+    #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
+    # }
+    # f(a) sensitivity.
+    # for (this_a_fitness in c(1.05, 1.4)) { #, 2.0)) {
+    #   
+    #   this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
+    #   this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
+    #   write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+    #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # if (this_a_fitness %in% c(1.4, 2.0)) {
+    #     # asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # }
+    #   # else {
+    #   #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # }
+    
 }
+
 
 
 asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, 
@@ -460,6 +473,8 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
          y = TeX("Majority group homophily, $h_{maj}$")) +
     coord_fixed() + labs(fill = measure_label) +
     mytheme
+    
+  # save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
   
   ggsave(write_path, width = 6.75, height = 5)
 }
@@ -549,69 +564,4 @@ supp_mean_plots <- function(csv_dir = "data/supp_parts",
                                       tbl_override = this_tbl,
                                       this_ylim = steps_ylim)
   }
-}
-
-
-plot_extreme_success_rates <- function(results_tbl, write_path = "../Writing/minmajnet/Figures/extreme_success_rates.pdf") {
-  
-  p <- results_tbl %>%
-    # Process results table for summarizing and plotting over h_min.
-    group_by(group_w_innovation, min_homophily, maj_homophily) %>%
-    summarize(success_rate = mean(frac_a_curr_trait)) %>%
-    group_by(group_w_innovation, min_homophily) %>%
-    summarize(min_success = min(success_rate), max_success = max(success_rate)) %>%
-    pivot_longer(cols = c(min_success, max_success), names_to = "variable", values_to = "value") %>%
-    # Plot.
-    ggplot(aes(x=min_homophily, linetype=variable, y = value, color = group_w_innovation)) +
-      geom_line(size=2) + xlab(TeX('Minority homophily, $h_{min}$')) +  ylab("Success rate") + ylim(c(0, 0.8)) + 
-      scale_color_manual(name = "Start group", values = c("#AA00AA", "#BBBBFF", "#00AAAA")) + 
-      scale_linetype_discrete(name = "Type", labels = c("Max", "Min")) + mytheme
-  
-  ggsave(write_path, width=8, height=4.5)
-    
-  return (p)
-}
-
-
-success_reciprocity <- function(results_tbl, adj_mat_dir, write_path = "../Writing/minmajnet/Figures/extreme_success_rates.pdf") {
-  
-  success_over_hmaj <- results_tbl %>%
-    group_by(group_w_)
-    
-}
-
-calculate_reciprocity <- function(adj_mat_dir, hmin = 0.0, sync_file = "data/reciprocity.csv", lim = 0) {
-  
-  if (!is_null(sync_file)) {
-    if (file.exists(sync_file)) {
-      return (read_csv(sync_file))
-    }
-  }
-  
-  files <- Sys.glob(file.path(adj_mat_dir, paste0("adjacency_hmin=", format(hmin, nsmall=1), "*.csv")))
-  if (lim > 0) {
-    files <- files[1:lim]
-  }
-  nfiles <- length(files)
-  hmin <- rep(hmin, nfiles)
-  # hmaj <- as.numeric( str_split( str_split(str_extract(files, "hmaj=.*"), "=")[[1]][2], "_")[[1]][1] )
-  
-  hmaj <- rep(0.0, nfiles)
-  clustering <- rep(0.0, nfiles)
-  reciprocity_vec <- rep(0.0, nfiles)
-  
-  for (f_idx in 1:nfiles) {
-    # print(paste0("On file index ", f_idx))
-    print(files[f_idx])
-    adjacency_matrix <- load_adjacency(files[f_idx])
-    hmaj[f_idx] <- as.numeric( str_split( str_split(str_extract(files[f_idx], "hmaj=.*"), "=")[[1]][2], "_")[[1]][1] )
-    
-    clustering[f_idx] <- ClustBCG(adjacency_matrix, type="directed")$GlobaltotalCC
-    
-    network <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed")
-    reciprocity_vec[f_idx] <- reciprocity(network)
-  }
-  
-  return (tibble(hmin, hmaj, clustering, reciprocity = reciprocity_vec))
-  # return (tibble(hmin, hmaj, reciprocity = reciprocity_vec))
 }
