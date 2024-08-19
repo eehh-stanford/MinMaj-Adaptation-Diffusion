@@ -7,12 +7,8 @@ require(reshape2)
 require(stringr)
 require(tidyr)
 
-require(igraph)
-require(DirectedClustering)
 
-source("scripts/percolation_vis.R")
-
-mytheme <- theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
+mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 text = element_text(size=22),# family = 'PT Sans'),
                 legend.key.width = unit(2, 'cm'),
                 legend.key.size = unit(1.5, 'lines'),
@@ -255,8 +251,6 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
                   file.path(write_dir, paste0(group_w_innovation, ".pdf")),
                   measure, cmap_limits)
   }
-  
-  return (tbl)
 }
 
 
@@ -310,6 +304,10 @@ load_from_parts <- function(csv_dirs = c("data/main_parts", "data/supp_parts"),
 }
 
 
+select_supp_rows <- function(supp_vars=c(""), values)
+
+
+
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
 
   group_w_vals <- c("1", "2", "Both")
@@ -333,44 +331,59 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
     }
   }
   
+  
+  
   for (group_w_innovation in group_w_vals) {
     # nagents sensitivity.
-    for (this_nagents in c(50, 2000)) {
+    for (this_nagents in c(50, 100, 2000)) {
       
       this_tbl <- tbl[tbl$nagents == this_nagents, ]
+      if (this_nagents == 50) {
+        mean_degree = 5
+        min_group_frac = 0.25
+      } else if (this_nagents == 100) {
+        mean_degree = 10
+        min_group_frac = 0.2
+      } else {
+        mean_degree = 20
+        min_group_frac = 0.05
+      }
+      
+      this_tbl <- tbl %>% 
+      
+      return (sel_tbl)
       this_write_dir <- file.path(write_dir, "nagents", this_nagents)
+      
       write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
       
       asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
-    }
-    # minority group size sensitivity.
-    for (this_min_group_frac in c(0.2, 0.35)) { #, 0.5)) {
-      
-      this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
-      this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      
-      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
-    }
-    # f(a) sensitivity.
-    for (this_a_fitness in c(1.05, 1.4)) { #, 2.0)) {
-      
-      this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
-      this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
-      asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # if (this_a_fitness %in% c(1.4, 2.0)) {
-        # asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # }
-      # else {
-      #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
-      # }
     }
   }
-
-  
-  # 
+    # minority group size sensitivity.
+    # for (this_min_group_frac in c(0.2, 0.4)) { #, 0.5)) {
+    #   
+    #   this_tbl <- tbl[tbl$min_group_frac == this_min_group_frac, ]
+    #   this_write_dir <- file.path(write_dir, "m", this_min_group_frac)
+    #   write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+    #   
+    #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 0.8))
+    # }
+    # f(a) sensitivity.
+    # for (this_a_fitness in c(1.05, 1.4)) { #, 2.0)) {
+    #   
+    #   this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
+    #   this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
+    #   write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+    #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # if (this_a_fitness %in% c(1.4, 2.0)) {
+    #     # asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # }
+    #   # else {
+    #   #   asymm_heatmap(this_tbl, group_w_innovation, write_path, cmap_limits = c(0.0, 1.0))
+    #   # }
+    
 }
+
 
 
 asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, 
@@ -442,6 +455,8 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path,
          y = TeX("Majority group homophily, $h_{maj}$")) +
     coord_fixed() + labs(fill = measure_label) +
     mytheme
+    
+  # save_path <- file.path(write_dir, str_replace(basename(csv_loc), ".csv", ".pdf"))
   
   ggsave(write_path, width = 6.75, height = 5)
 }
