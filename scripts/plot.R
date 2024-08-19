@@ -5,6 +5,7 @@ require(readr)
 require(purrr)
 require(reshape2)
 require(stringr)
+require(tidyr)
 
 require(igraph)
 require(DirectedClustering)
@@ -245,28 +246,9 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts",
                                 cmap_limits = c(0.0, 0.8))
 {
   
-  # for (group_w_innovation in c(1, 2, "Both")) {
-  group_w_vals <- c("1", "2", "Both")
-  # group_w_vals <- c("1")
-  for (group_w_innovation in group_w_vals) {
-    
-    files <- list.files(csv_dir, 
-                        pattern = paste0("group_w_innovation=", group_w_innovation),
-                        full.names = TRUE)
-    
-    tbl_part <- files %>%
-      map_df(~read_csv(., show_col_types = FALSE))
-    
-    tbl_part$group_w_innovation = group_w_innovation
-    
-    if (group_w_innovation == "1") {
-      tbl <- tbl_part
-    }
-    else {
-      tbl <- rbind(tbl, tbl_part)
-    }
-  }
+  tbl <- load_from_parts(c(csv_dir), "data/main_asymm_sync.tmp.csv")
   
+  group_w_vals <- c("1", "2", "Both")
   for (group_w_innovation in group_w_vals) {
     
     asymm_heatmap(tbl, group_w_innovation, 
