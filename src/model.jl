@@ -162,24 +162,6 @@ function init_network!(model)
     E_maj_ingroup = ceil(Int, E_maj * ((1 + model.maj_homophily) / 2.0))
     E_maj_outgroup = E_maj - E_maj_ingroup
 
-    # Add a random 'learns-from' tie for each agent in minority group to another
-    # in-group member to ensure fully-connected populations.
-
-    ### XXX HERE IS PREVIOUS MIN ID INITIALIZATION
-    # for min_id in minority_ids
-    #     possible_teacher_ids = filter(id -> id ≠ min_id, minority_ids)
-    #     selected_teacher = sample(possible_teacher_ids)
-    #     # @assert add_edge!(network, min_id, selected_teacher)
-    #     successful_add = false
-    #     while !successful_add
-    #         successful_add = add_edge!(network, min_id, selected_teacher)
-    #     end
-    # end
-
-    # Add the remaining in-minority-group ties.
-    # remaining_min_ingroup = E_min_ingroup - length(minority_ids)
-
-    # for _ in 1:remaining_min_ingroup
     for _ in 1:E_min_ingroup
 
         # Generate a new edge that may already exist in social network.
@@ -195,21 +177,6 @@ function init_network!(model)
         # Add new edge to the network.
         @assert add_edge!(network, new_edge) "Edge addition failed for $new_edge"
     end
-
-    # Add a random 'learns-from' tie for each agent in majority group to another
-    # in-group member to ensure fully-connected populations.
-
-    ### XXX HERE IS MAJ ID INITIALIZATION
-    # for maj_id in majority_ids
-    #     possible_teacher_ids = filter(idx -> idx ≠ maj_id, majority_ids)
-    #     selected_teacher = sample(possible_teacher_ids)
-    #     # add_edge!(network, maj_id, selected_teacher)
-
-    #     successful_add = false
-    #     while !successful_add
-    #         successful_add = add_edge!(network, maj_id, selected_teacher)
-    #     end
-    # end
 
     # Add the remaining in-majority-group ties.
     remaining_maj_ingroup = E_maj_ingroup - length(majority_ids)
@@ -268,7 +235,7 @@ function init_network!(model)
 
     # Update agents with their teachers to simplify teacher lookups.
     edges = network.fadjlist
-    # for (idx, agent) in enumerate(allagents(model))
+
     for agent in allagents(model)
         agent.teachers = edges[agent.id]
     end
